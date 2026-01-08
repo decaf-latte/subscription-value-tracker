@@ -89,6 +89,7 @@ public class SubscriptionController {
 
     @PostMapping("/{id}/check-in")
     public String checkIn(@PathVariable Long id,
+                          @RequestParam(required = false) String returnUrl,
                           HttpServletRequest request,
                           HttpServletResponse response,
                           RedirectAttributes redirectAttributes) {
@@ -99,6 +100,6 @@ public class SubscriptionController {
         } catch (IllegalStateException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/";
+        return "redirect:" + (returnUrl != null ? returnUrl : "/calendar");
     }
 }

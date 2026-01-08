@@ -8,7 +8,9 @@
       "Bash(git push:*)",
       "Bash(git stash:*)",
       "Bash(./gradlew compileJava:*)",
-      "Bash(./gradlew clean:*)"
+      "Bash(./gradlew clean:*)",
+      "Bash(./gradlew test:*)",
+      "Bash(./gradlew dependencies:*)"
     ]
   }
 }

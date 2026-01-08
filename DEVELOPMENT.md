@@ -374,12 +374,62 @@ src/main/resources/templates/
 
 ---
 
-## 8. 향후 개발 예정
+## 8. 테스트 코드 구조
+
+### 테스트 디렉토리
+```
+src/test/java/com/tracker/subscriptionvaluetracker/
+├── SubscriptionValueTrackerApplicationTests.java  # 통합 테스트
+│
+├── domain/subscription/
+│   ├── SubscriptionServiceTest.java     # 서비스 단위 테스트 (25+ 테스트)
+│   ├── SubscriptionControllerTest.java  # 컨트롤러 단위 테스트 (10+ 테스트)
+│   └── CalendarServiceTest.java         # 캘린더 서비스 테스트 (5+ 테스트)
+│
+├── common/
+│   ├── EmojiMapperTest.java             # 이모지 변환 테스트
+│   └── UserIdentifierTest.java          # 사용자 식별 테스트
+│
+└── web/
+    └── CalendarControllerTest.java      # 캘린더 컨트롤러 테스트 (8+ 테스트)
+```
+
+### 테스트 실행
+```bash
+# 전체 테스트 실행
+./gradlew test
+
+# 특정 클래스만 실행
+./gradlew test --tests "SubscriptionServiceTest"
+
+# 테스트 리포트 확인
+open build/reports/tests/test/index.html
+```
+
+### 테스트 커버리지
+
+| 클래스 | 테스트 항목 |
+|--------|-------------|
+| SubscriptionService | 구독 CRUD, 출석 체크/토글, 일일비용 계산, 비용 레벨 판단 |
+| SubscriptionController | 목록 조회, 폼 표시, 생성/수정/삭제, 출석 체크 |
+| CalendarService | 캘린더 데이터 생성, 출석 기록 표시, 범례 조회 |
+| CalendarController | 캘린더 페이지, 그리드 HTMX, 월 이동, 통계 계산 |
+| EmojiMapper | 코드→이모지 변환, 기본값 처리, 전체 코드 조회 |
+| UserIdentifier | UUID 쿠키 생성/조회, 쿠키 설정 검증 |
+
+---
+
+## 9. 향후 개발 예정
 
 ### ~~Phase 2: 캘린더 뷰~~ ✅ 완료
 - ~~월간 달력에 출석 기록 표시~~
 - ~~이모지 + 일일비용 표시~~
 - ~~HTMX로 월 이동~~
+
+### ~~Phase 2.5: 출석 기능 개선~~ ✅ 완료
+- ~~출석 토글 (클릭하면 취소)~~
+- ~~캘린더 날짜 클릭 시 출석 체크~~
+- ~~구독 선택 모달~~
 
 ### Phase 3: 투자형 항목
 - Investment 엔티티

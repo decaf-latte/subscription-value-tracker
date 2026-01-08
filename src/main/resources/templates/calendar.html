@@ -110,41 +110,45 @@
 
     <!-- 구독 데이터를 JavaScript에서 사용하기 위한 hidden 데이터 -->
     <script th:inline="javascript">
-        const subscriptions = /*[[${subscriptions}]]*/ [];
-
+        var subscriptionData = /*[[${subscriptions}]]*/ [];
+    </script>
+    <script>
         function openModal(date) {
-            const modal = document.getElementById('checkin-modal');
-            const dateDisplay = document.getElementById('modal-date-display');
-            const listContainer = document.getElementById('modal-subscription-list');
+            var modal = document.getElementById('checkin-modal');
+            var dateDisplay = document.getElementById('modal-date-display');
+            var listContainer = document.getElementById('modal-subscription-list');
 
             // 날짜 표시
-            const dateObj = new Date(date);
-            const monthDay = (dateObj.getMonth() + 1) + '월 ' + dateObj.getDate() + '일';
+            var dateObj = new Date(date);
+            var monthDay = (dateObj.getMonth() + 1) + '월 ' + dateObj.getDate() + '일';
             dateDisplay.textContent = monthDay;
 
             // 구독 목록 생성
             listContainer.innerHTML = '';
 
-            if (subscriptions.length === 0) {
+            if (!subscriptionData || subscriptionData.length === 0) {
                 listContainer.innerHTML = '<p class="text-gray-400 text-center py-4">등록된 구독이 없습니다</p>';
             } else {
-                subscriptions.forEach(sub => {
-                    const item = document.createElement('form');
+                subscriptionData.forEach(function(sub) {
+                    var item = document.createElement('form');
                     item.method = 'post';
                     item.action = '/subscriptions/' + sub.id + '/check-in';
 
-                    item.innerHTML = `
-                        <input type="hidden" name="date" value="${date}">
-                        <button type="submit"
-                                class="w-full flex items-center gap-3 p-3 bg-white/5 hover:bg-white/10 rounded-xl transition text-left">
-                            <span class="text-2xl">${sub.emoji}</span>
-                            <div class="flex-1">
-                                <p class="font-medium">${sub.name}</p>
-                                <p class="text-xs text-gray-400">월 ₩${sub.monthlyAmount.toLocaleString()}</p>
-                            </div>
-                            <span class="text-emerald-400">+</span>
-                        </button>
-                    `;
+                    var amount = sub.monthlyAmount || 0;
+                    var amountFormatted = amount.toLocaleString();
+
+                    item.innerHTML =
+                        '<input type="hidden" name="date" value="' + date + '">' +
+                        '<button type="submit" ' +
+                        'class="w-full flex items-center gap-3 p-3 bg-white/5 hover:bg-white/10 rounded-xl transition text-left">' +
+                        '<span class="text-2xl">' + (sub.emoji || '📌') + '</span>' +
+                        '<div class="flex-1">' +
+                        '<p class="font-medium">' + (sub.name || '') + '</p>' +
+                        '<p class="text-xs text-gray-400">월 ₩' + amountFormatted + '</p>' +
+                        '</div>' +
+                        '<span class="text-emerald-400">+</span>' +
+                        '</button>';
+
                     listContainer.appendChild(item);
                 });
             }
@@ -154,15 +158,20 @@
         }
 
         function closeModal() {
-            const modal = document.getElementById('checkin-modal');
+            var modal = document.getElementById('checkin-modal');
             modal.classList.add('hidden');
             modal.classList.remove('flex');
         }
 
         // 모달 바깥 클릭 시 닫기
-        document.getElementById('checkin-modal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeModal();
+        document.addEventListener('DOMContentLoaded', function() {
+            var modalElement = document.getElementById('checkin-modal');
+            if (modalElement) {
+                modalElement.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        closeModal();
+                    }
+                });
             }
         });
 

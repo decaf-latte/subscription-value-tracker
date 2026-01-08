@@ -76,6 +76,34 @@ src/main/resources/
 - Emoji codes stored in DB, converted to emoji on frontend (e.g., "gym" → "🏋️")
 - HTMX for partial page updates on attendance check (refreshes entire calendar)
 
+## Testing Requirements
+
+**테스트 코드 작성 규칙 (필수!):**
+- 모든 기능에는 반드시 테스트 코드(TC)를 작성해야 함
+- 테스트는 JUnit 5 + Mockito 사용
+- `@DisplayName`으로 한글 테스트 설명 작성
+- `@Nested`로 테스트 그룹화
+
+**테스트 구조:**
+```
+src/test/java/com/tracker/subscriptionvaluetracker/
+├── domain/subscription/
+│   ├── SubscriptionServiceTest.java    # 서비스 단위 테스트
+│   ├── SubscriptionControllerTest.java # 컨트롤러 단위 테스트
+│   └── CalendarServiceTest.java        # 캘린더 서비스 테스트
+├── common/
+│   ├── EmojiMapperTest.java            # 유틸리티 테스트
+│   └── UserIdentifierTest.java         # 사용자 식별 테스트
+└── web/
+    └── CalendarControllerTest.java     # 웹 컨트롤러 테스트
+```
+
+**테스트 실행:**
+```bash
+./gradlew test                    # 전체 테스트 실행
+./gradlew test --tests "클래스명" # 특정 클래스만 실행
+```
+
 ## Git Workflow
 
 **브랜치 전략:**
@@ -85,10 +113,12 @@ src/main/resources/
 
 **작업 완료 시 Git 프로세스:**
 1. 태스크별 feature 브랜치 생성: `git checkout -b feature/태스크명`
-2. 작업 완료 후 커밋: 작업 내용 요약을 커밋 메시지로
-3. dev 브랜치로 머지 후 푸시
-4. PRD.md, PROJECT_SPEC.md 체크리스트 업데이트
-5. DEVELOPMENT.md 업데이트 (새 엔티티, API, 다이어그램 추가)
+2. 기능 구현 + 테스트 코드 작성 (필수!)
+3. 테스트 통과 확인: `./gradlew test`
+4. 작업 완료 후 커밋: 작업 내용 요약을 커밋 메시지로
+5. dev 브랜치로 머지 후 푸시
+6. PRD.md, PROJECT_SPEC.md 체크리스트 업데이트
+7. DEVELOPMENT.md 업데이트 (새 엔티티, API, 다이어그램 추가)
 
 **커밋 메시지 형식:**
 ```

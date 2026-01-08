@@ -101,4 +101,5 @@ src/main/resources/
 
 - `PRD.md` - Product requirements document
 - `PROJECT_SPEC.md` - Technical specifications with data models and API design
+- `DEVELOPMENT.md` - 개발 문서 (패키지 구조, ERD, 플로우차트, 시퀀스 다이어그램)
 - `wireframe-v4-calendar.html` - UI wireframe reference

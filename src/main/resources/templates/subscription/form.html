@@ -74,7 +74,9 @@
                     </div>
                 </div>
                 <div>
-                    <label for="monthlyAmount" class="block text-sm font-medium text-gray-300 mb-2">월 환산 금액 <span class="text-emerald-400">(자동계산)</span></label>
+                    <label for="monthlyAmount" class="block text-sm font-medium text-gray-300 mb-2">
+                        <span id="amountLabel">월 환산 금액</span> <span class="text-emerald-400">(자동계산)</span>
+                    </label>
                     <div class="relative">
                         <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">₩</span>
                         <input type="number" id="monthlyAmount" th:field="*{monthlyAmount}"
@@ -83,7 +85,7 @@
                                readonly
                                class="w-full pl-10 pr-4 py-3 bg-dark-card border border-dark-border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 transition bg-white/5">
                     </div>
-                    <p class="mt-1 text-xs text-gray-500">총 금액 ÷ 개월 수 (자동 계산)</p>
+                    <p id="amountHint" class="mt-1 text-xs text-gray-500">총 금액 ÷ 개월 수 (자동 계산)</p>
                 </div>
             </div>
 
@@ -131,27 +133,32 @@
             calculateMonthlyAmount();
         }
 
-        // 월환산 금액 계산
+        // 환산 금액 계산 (월/회당)
         function calculateMonthlyAmount() {
             const totalAmount = document.getElementById('totalAmount').value;
             const periodNumber = document.getElementById('periodNumber').value;
             const periodUnit = document.getElementById('periodUnit').value;
             const monthlyAmountInput = document.getElementById('monthlyAmount');
+            const amountLabel = document.getElementById('amountLabel');
+            const amountHint = document.getElementById('amountHint');
+
+            // 라벨 및 힌트 업데이트
+            if (periodUnit === '개월') {
+                amountLabel.textContent = '월 환산 금액';
+                amountHint.textContent = '총 금액 ÷ 개월 수 (자동 계산)';
+            } else {
+                amountLabel.textContent = '회당 환산 금액';
+                amountHint.textContent = '총 금액 ÷ 횟수 (자동 계산)';
+            }
 
             if (!totalAmount || !periodNumber) {
                 return;
             }
 
-            let months = 1;
-            if (periodUnit === '개월') {
-                months = parseInt(periodNumber);
-            } else {
-                // 회차 기반은 1개월로 간주
-                months = 1;
-            }
-
-            const monthlyAmount = Math.round(totalAmount / months);
-            monthlyAmountInput.value = monthlyAmount;
+            // 계산: 둘 다 총금액 ÷ 숫자
+            const divisor = parseInt(periodNumber);
+            const calculatedAmount = Math.round(totalAmount / divisor);
+            monthlyAmountInput.value = calculatedAmount;
         }
 
         // 기존 periodType 파싱하여 필드에 채우기 (수정 모드)

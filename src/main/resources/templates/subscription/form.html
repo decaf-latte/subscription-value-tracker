@@ -43,6 +43,8 @@
                 <input type="text" id="periodType" th:field="*{periodType}"
                        placeholder="월간, 3개월, 12개월, 30회 등"
                        required
+                       onchange="calculateMonthlyAmount()"
+                       oninput="calculateMonthlyAmount()"
                        class="w-full px-4 py-3 bg-dark-card border border-dark-border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 transition">
                 <p class="mt-1 text-xs text-gray-500">예: 월간, 3개월, 12개월, 30회권</p>
             </div>
@@ -56,19 +58,22 @@
                         <input type="number" id="totalAmount" th:field="*{totalAmount}"
                                placeholder="360000"
                                required min="0"
+                               onchange="calculateMonthlyAmount()"
+                               oninput="calculateMonthlyAmount()"
                                class="w-full pl-10 pr-4 py-3 bg-dark-card border border-dark-border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 transition">
                     </div>
                 </div>
                 <div>
-                    <label for="monthlyAmount" class="block text-sm font-medium text-gray-300 mb-2">월 환산 금액</label>
+                    <label for="monthlyAmount" class="block text-sm font-medium text-gray-300 mb-2">월 환산 금액 <span class="text-emerald-400">(자동계산)</span></label>
                     <div class="relative">
                         <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">₩</span>
                         <input type="number" id="monthlyAmount" th:field="*{monthlyAmount}"
-                               placeholder="30000"
+                               placeholder="자동 계산됨"
                                required min="0"
-                               class="w-full pl-10 pr-4 py-3 bg-dark-card border border-dark-border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 transition">
+                               readonly
+                               class="w-full pl-10 pr-4 py-3 bg-dark-card border border-dark-border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 transition bg-white/5">
                     </div>
-                    <p class="mt-1 text-xs text-gray-500">총 금액 ÷ 개월 수</p>
+                    <p class="mt-1 text-xs text-gray-500">총 금액 ÷ 개월 수 (자동 계산)</p>
                 </div>
             </div>
 
@@ -101,6 +106,50 @@
             </div>
         </form>
     </div>
+
+    <script>
+        function calculateMonthlyAmount() {
+            const totalAmount = document.getElementById('totalAmount').value;
+            const periodType = document.getElementById('periodType').value;
+            const monthlyAmountInput = document.getElementById('monthlyAmount');
+
+            if (!totalAmount || !periodType) {
+                return;
+            }
+
+            const months = parseMonths(periodType);
+            const monthlyAmount = Math.round(totalAmount / months);
+            monthlyAmountInput.value = monthlyAmount;
+        }
+
+        function parseMonths(periodType) {
+            // "월간" = 1개월
+            if (periodType === '월간' || periodType === '월' || periodType === '1개월') {
+                return 1;
+            }
+
+            // "N개월" 패턴 추출 (예: "3개월", "12개월")
+            const monthMatch = periodType.match(/(\d+)\s*개월/);
+            if (monthMatch) {
+                return parseInt(monthMatch[1]);
+            }
+
+            // "N년" 패턴 (예: "1년")
+            const yearMatch = periodType.match(/(\d+)\s*년/);
+            if (yearMatch) {
+                return parseInt(yearMatch[1]) * 12;
+            }
+
+            // "N회", "N회권" 등은 1개월로 간주 (회차 기반 구독)
+            // 기본값: 1개월
+            return 1;
+        }
+
+        // 페이지 로드 시 기존 값이 있으면 계산
+        document.addEventListener('DOMContentLoaded', function() {
+            calculateMonthlyAmount();
+        });
+    </script>
 </section>
 </body>
 </html>

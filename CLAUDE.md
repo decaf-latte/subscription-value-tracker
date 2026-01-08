@@ -88,6 +88,7 @@ src/main/resources/
 2. 작업 완료 후 커밋: 작업 내용 요약을 커밋 메시지로
 3. dev 브랜치로 머지 후 푸시
 4. PRD.md, PROJECT_SPEC.md 체크리스트 업데이트
+5. DEVELOPMENT.md 업데이트 (새 엔티티, API, 다이어그램 추가)
 
 **커밋 메시지 형식:**
 ```

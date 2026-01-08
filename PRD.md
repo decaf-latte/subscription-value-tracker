@@ -119,13 +119,13 @@
 - [x] Spring Boot 프로젝트 생성
 - [x] Thymeleaf + Tailwind 설정
 - [x] MySQL 연동 (H2 개발 / MySQL 운영 프로필 분리)
-- [ ] Subscription 엔티티 + Repository
-- [ ] 구독 CRUD API + 화면
+- [x] Subscription 엔티티 + Repository
+- [x] 구독 CRUD API + 화면
 - [x] UUID 쿠키 기반 사용자 식별
 
 #### 2주차 (1/13~19): 핵심 기능 + UI
-- [ ] UsageLog 엔티티 + Repository
-- [ ] 출석 체크 기능 (HTMX)
+- [x] UsageLog 엔티티 + Repository
+- [x] 출석 체크 기능 (HTMX)
 - [ ] 일일비용 계산 로직
 - [ ] 캘린더 뷰 구현
 - [ ] 대시보드 요약 카드

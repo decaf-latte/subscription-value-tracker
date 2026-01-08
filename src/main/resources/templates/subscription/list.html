@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/default :: layout(~{::title/text()}, ~{::section})}">
+<head>
+    <title>구독 목록</title>
+</head>
+<body>
+<section>
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold">내 구독 목록</h2>
+        <a th:href="@{/subscriptions/new}"
+           class="px-4 py-2 bg-emerald-500 text-white rounded-xl font-medium hover:bg-emerald-600 transition">
+            + 구독 추가
+        </a>
+    </div>
+
+    <!-- 구독 없을 때 -->
+    <div th:if="${#lists.isEmpty(subscriptions)}" class="text-center py-16">
+        <p class="text-6xl mb-4">📝</p>
+        <p class="text-xl text-gray-400 mb-4">아직 등록된 구독이 없습니다</p>
+        <a th:href="@{/subscriptions/new}"
+           class="inline-block px-6 py-3 bg-emerald-500 text-white rounded-xl font-medium hover:bg-emerald-600 transition">
+            첫 구독 등록하기
+        </a>
+    </div>
+
+    <!-- 구독 카드 목록 -->
+    <div th:unless="${#lists.isEmpty(subscriptions)}" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div th:each="sub : ${subscriptions}" class="bg-dark-card rounded-2xl p-5 border border-dark-border">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-3">
+                    <span class="text-3xl" th:text="${sub.emoji}">📌</span>
+                    <div>
+                        <h3 class="font-semibold text-lg" th:text="${sub.name}">구독명</h3>
+                        <p class="text-sm text-gray-400" th:text="${sub.periodType}">기간</p>
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <a th:href="@{/subscriptions/{id}/edit(id=${sub.id})}"
+                       class="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                    </a>
+                    <form th:action="@{/subscriptions/{id}/delete(id=${sub.id})}" method="post"
+                          onsubmit="return confirm('정말 삭제하시겠습니까?');">
+                        <button type="submit"
+                                class="p-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                            </svg>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div class="bg-white/5 rounded-xl p-3">
+                    <p class="text-xs text-gray-400 mb-1">월 구독료</p>
+                    <p class="text-lg font-bold" th:text="'₩' + ${#numbers.formatInteger(sub.monthlyAmount, 0, 'COMMA')}">₩0</p>
+                </div>
+                <div class="bg-white/5 rounded-xl p-3">
+                    <p class="text-xs text-gray-400 mb-1">이번 달 사용</p>
+                    <p class="text-lg font-bold">
+                        <span th:text="${sub.usageCount}">0</span>
+                        <span class="text-sm text-gray-500">회</span>
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center p-3 bg-white/5 rounded-xl">
+                <span class="text-sm text-gray-400">일일 비용</span>
+                <span class="text-xl font-bold"
+                      th:classappend="${sub.dailyCostLevel == 'good'} ? 'text-emerald-400' : (${sub.dailyCostLevel == 'warning'} ? 'text-red-400' : 'text-yellow-400')"
+                      th:text="'₩' + ${#numbers.formatInteger(sub.dailyCost, 0, 'COMMA')}">₩0</span>
+            </div>
+        </div>
+    </div>
+</section>
+</body>
+</html>

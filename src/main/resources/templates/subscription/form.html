@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/default :: layout(~{::title/text()}, ~{::section})}">
+<head>
+    <title th:text="${isEdit} ? '구독 수정' : '구독 추가'">구독 추가</title>
+</head>
+<body>
+<section>
+    <div class="max-w-lg mx-auto">
+        <h2 class="text-2xl font-bold mb-6" th:text="${isEdit} ? '구독 수정' : '새 구독 추가'">새 구독 추가</h2>
+
+        <form th:action="${isEdit} ? @{/subscriptions/{id}(id=${subscriptionId})} : @{/subscriptions}"
+              method="post"
+              th:object="${form}"
+              class="space-y-5">
+
+            <!-- 이름 -->
+            <div>
+                <label for="name" class="block text-sm font-medium text-gray-300 mb-2">서비스 이름</label>
+                <input type="text" id="name" th:field="*{name}"
+                       placeholder="헬스장, 넷플릭스 등"
+                       required
+                       class="w-full px-4 py-3 bg-dark-card border border-dark-border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 transition">
+            </div>
+
+            <!-- 이모지 -->
+            <div>
+                <label for="emojiCode" class="block text-sm font-medium text-gray-300 mb-2">아이콘</label>
+                <select id="emojiCode" th:field="*{emojiCode}"
+                        required
+                        class="w-full px-4 py-3 bg-dark-card border border-dark-border rounded-xl text-white focus:outline-none focus:border-emerald-500 transition">
+                    <option value="">선택하세요</option>
+                    <option th:each="entry : ${emojiCodes}"
+                            th:value="${entry.key}"
+                            th:text="${entry.value} + ' ' + ${entry.key}">
+                    </option>
+                </select>
+            </div>
+
+            <!-- 기간 유형 -->
+            <div>
+                <label for="periodType" class="block text-sm font-medium text-gray-300 mb-2">기간 유형</label>
+                <input type="text" id="periodType" th:field="*{periodType}"
+                       placeholder="월간, 3개월, 12개월, 30회 등"
+                       required
+                       class="w-full px-4 py-3 bg-dark-card border border-dark-border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 transition">
+                <p class="mt-1 text-xs text-gray-500">예: 월간, 3개월, 12개월, 30회권</p>
+            </div>
+
+            <!-- 금액 -->
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label for="totalAmount" class="block text-sm font-medium text-gray-300 mb-2">총 금액</label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">₩</span>
+                        <input type="number" id="totalAmount" th:field="*{totalAmount}"
+                               placeholder="360000"
+                               required min="0"
+                               class="w-full pl-10 pr-4 py-3 bg-dark-card border border-dark-border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 transition">
+                    </div>
+                </div>
+                <div>
+                    <label for="monthlyAmount" class="block text-sm font-medium text-gray-300 mb-2">월 환산 금액</label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">₩</span>
+                        <input type="number" id="monthlyAmount" th:field="*{monthlyAmount}"
+                               placeholder="30000"
+                               required min="0"
+                               class="w-full pl-10 pr-4 py-3 bg-dark-card border border-dark-border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 transition">
+                    </div>
+                    <p class="mt-1 text-xs text-gray-500">총 금액 ÷ 개월 수</p>
+                </div>
+            </div>
+
+            <!-- 날짜 -->
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label for="startDate" class="block text-sm font-medium text-gray-300 mb-2">시작일</label>
+                    <input type="date" id="startDate" th:field="*{startDate}"
+                           required
+                           class="w-full px-4 py-3 bg-dark-card border border-dark-border rounded-xl text-white focus:outline-none focus:border-emerald-500 transition">
+                </div>
+                <div>
+                    <label for="endDate" class="block text-sm font-medium text-gray-300 mb-2">종료일 (선택)</label>
+                    <input type="date" id="endDate" th:field="*{endDate}"
+                           class="w-full px-4 py-3 bg-dark-card border border-dark-border rounded-xl text-white focus:outline-none focus:border-emerald-500 transition">
+                </div>
+            </div>
+
+            <!-- 버튼 -->
+            <div class="flex gap-3 pt-4">
+                <a th:href="@{/}"
+                   class="flex-1 py-3 text-center bg-dark-card border border-dark-border rounded-xl text-gray-300 hover:bg-white/5 transition">
+                    취소
+                </a>
+                <button type="submit"
+                        class="flex-1 py-3 bg-emerald-500 text-white rounded-xl font-medium hover:bg-emerald-600 transition"
+                        th:text="${isEdit} ? '수정하기' : '등록하기'">
+                    등록하기
+                </button>
+            </div>
+        </form>
+    </div>
+</section>
+</body>
+</html>

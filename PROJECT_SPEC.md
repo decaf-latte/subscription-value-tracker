@@ -442,9 +442,11 @@ subscription-value-tracker/
 - [x] UserIdentifier 유틸리티 (UUID 쿠키 기반 사용자 식별)
 - [x] EmojiMapper 유틸리티 (이모지 코드 변환)
 - [x] 기본 레이아웃 템플릿 + 대시보드 페이지 템플릿
-- [ ] 구독 엔티티 + Repository
-- [ ] 구독 CRUD (등록/수정/삭제)
-- [ ] 출석 체크 기능 (HTMX로 버튼 클릭)
+- [x] 구독 엔티티 + Repository (Subscription, UsageLog)
+- [x] 구독 CRUD (등록/수정/삭제)
+- [x] 출석 체크 기능 (HTMX로 버튼 클릭)
+- [x] SubscriptionService (일일비용 계산, 출석 체크 로직)
+- [x] DashboardController + SubscriptionController
 
 ### 2주차 (1/13~19): 핵심 기능 + UI
 - [ ] 일일 비용 계산 로직
@@ -530,3 +532,5 @@ data class ApiResponse<T>(
 | 2025-01-08 | **설정 완료**: application.yml (H2/MySQL), Thymeleaf 레이아웃, HTMX 연동 |
 | 2025-01-08 | **유틸리티 생성**: UserIdentifier (UUID 쿠키), EmojiMapper (이모지 코드 변환) |
 | 2025-01-08 | **템플릿 생성**: layout/default.html, index.html (대시보드) |
+| 2025-01-08 | **구독 CRUD 완성**: Subscription/UsageLog 엔티티, Repository, Service, Controller |
+| 2025-01-08 | **템플릿 추가**: subscription/list.html, subscription/form.html |

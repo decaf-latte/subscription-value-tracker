@@ -1,0 +1,170 @@
+package com.tracker.subscriptionvaluetracker.domain.subscription;
+
+import com.tracker.subscriptionvaluetracker.common.EmojiMapper;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.util.List;
+import java.util.Optional;
+
+@Service
+@Transactional(readOnly = true)
+public class SubscriptionService {
+
+    private final SubscriptionRepository subscriptionRepository;
+    private final UsageLogRepository usageLogRepository;
+
+    public SubscriptionService(SubscriptionRepository subscriptionRepository,
+                                UsageLogRepository usageLogRepository) {
+        this.subscriptionRepository = subscriptionRepository;
+        this.usageLogRepository = usageLogRepository;
+    }
+
+    public List<Subscription> getActiveSubscriptions(String userUuid) {
+        return subscriptionRepository.findByUserUuidAndIsActiveTrueOrderByCreatedAtDesc(userUuid);
+    }
+
+    public Optional<Subscription> getSubscription(Long id, String userUuid) {
+        return subscriptionRepository.findByIdAndUserUuid(id, userUuid);
+    }
+
+    @Transactional
+    public Subscription createSubscription(String userUuid, SubscriptionForm form) {
+        Subscription subscription = new Subscription(
+                userUuid,
+                form.getName(),
+                form.getEmojiCode(),
+                form.getPeriodType(),
+                form.getTotalAmount(),
+                form.getMonthlyAmount(),
+                form.getStartDate()
+        );
+        if (form.getEndDate() != null) {
+            subscription.setEndDate(form.getEndDate());
+        }
+        return subscriptionRepository.save(subscription);
+    }
+
+    @Transactional
+    public Subscription updateSubscription(Long id, String userUuid, SubscriptionForm form) {
+        Subscription subscription = subscriptionRepository.findByIdAndUserUuid(id, userUuid)
+                .orElseThrow(() -> new IllegalArgumentException("구독을 찾을 수 없습니다."));
+
+        subscription.setName(form.getName());
+        subscription.setEmojiCode(form.getEmojiCode());
+        subscription.setPeriodType(form.getPeriodType());
+        subscription.setTotalAmount(form.getTotalAmount());
+        subscription.setMonthlyAmount(form.getMonthlyAmount());
+        subscription.setStartDate(form.getStartDate());
+        subscription.setEndDate(form.getEndDate());
+
+        return subscriptionRepository.save(subscription);
+    }
+
+    @Transactional
+    public void deleteSubscription(Long id, String userUuid) {
+        Subscription subscription = subscriptionRepository.findByIdAndUserUuid(id, userUuid)
+                .orElseThrow(() -> new IllegalArgumentException("구독을 찾을 수 없습니다."));
+        subscription.setIsActive(false);
+        subscriptionRepository.save(subscription);
+    }
+
+    @Transactional
+    public UsageLog checkIn(Long subscriptionId, String userUuid) {
+        Subscription subscription = subscriptionRepository.findByIdAndUserUuid(subscriptionId, userUuid)
+                .orElseThrow(() -> new IllegalArgumentException("구독을 찾을 수 없습니다."));
+
+        LocalDate today = LocalDate.now();
+
+        // 이미 오늘 출석했는지 확인
+        if (usageLogRepository.existsBySubscriptionIdAndUsedAt(subscriptionId, today)) {
+            throw new IllegalStateException("오늘 이미 출석했습니다.");
+        }
+
+        UsageLog usageLog = new UsageLog(subscriptionId, today);
+        return usageLogRepository.save(usageLog);
+    }
+
+    @Transactional
+    public void cancelCheckIn(Long usageLogId, String userUuid) {
+        UsageLog usageLog = usageLogRepository.findById(usageLogId)
+                .orElseThrow(() -> new IllegalArgumentException("출석 기록을 찾을 수 없습니다."));
+
+        // 해당 구독이 사용자의 것인지 확인
+        subscriptionRepository.findByIdAndUserUuid(usageLog.getSubscriptionId(), userUuid)
+                .orElseThrow(() -> new IllegalArgumentException("권한이 없습니다."));
+
+        usageLogRepository.delete(usageLog);
+    }
+
+    public int getMonthlyUsageCount(Long subscriptionId) {
+        YearMonth currentMonth = YearMonth.now();
+        LocalDate startOfMonth = currentMonth.atDay(1);
+        LocalDate endOfMonth = currentMonth.atEndOfMonth();
+        return (int) usageLogRepository.countBySubscriptionIdAndUsedAtBetween(subscriptionId, startOfMonth, endOfMonth);
+    }
+
+    public BigDecimal calculateDailyCost(Subscription subscription) {
+        int usageCount = getMonthlyUsageCount(subscription.getId());
+        if (usageCount == 0) {
+            return subscription.getMonthlyAmount();
+        }
+        return subscription.getMonthlyAmount().divide(BigDecimal.valueOf(usageCount), 0, RoundingMode.HALF_UP);
+    }
+
+    public String getDailyCostLevel(BigDecimal dailyCost, BigDecimal monthlyAmount) {
+        // 일일 비용이 월 금액의 1/20 이하면 good, 1/10 이하면 normal, 그 이상이면 warning
+        BigDecimal goodThreshold = monthlyAmount.divide(BigDecimal.valueOf(20), 0, RoundingMode.HALF_UP);
+        BigDecimal normalThreshold = monthlyAmount.divide(BigDecimal.valueOf(10), 0, RoundingMode.HALF_UP);
+
+        if (dailyCost.compareTo(goodThreshold) <= 0) {
+            return "good";
+        } else if (dailyCost.compareTo(normalThreshold) <= 0) {
+            return "normal";
+        } else {
+            return "warning";
+        }
+    }
+
+    public boolean isCheckedInToday(Long subscriptionId) {
+        return usageLogRepository.existsBySubscriptionIdAndUsedAt(subscriptionId, LocalDate.now());
+    }
+
+    public long getActiveSubscriptionCount(String userUuid) {
+        return subscriptionRepository.countByUserUuidAndIsActiveTrue(userUuid);
+    }
+
+    public SubscriptionViewDto toViewDto(Subscription subscription) {
+        int usageCount = getMonthlyUsageCount(subscription.getId());
+        BigDecimal dailyCost = calculateDailyCost(subscription);
+        String dailyCostLevel = getDailyCostLevel(dailyCost, subscription.getMonthlyAmount());
+        boolean checkedInToday = isCheckedInToday(subscription.getId());
+        String emoji = EmojiMapper.toEmoji(subscription.getEmojiCode());
+
+        return new SubscriptionViewDto(
+                subscription.getId(),
+                subscription.getName(),
+                subscription.getEmojiCode(),
+                emoji,
+                subscription.getPeriodType(),
+                subscription.getTotalAmount(),
+                subscription.getMonthlyAmount(),
+                subscription.getStartDate(),
+                subscription.getEndDate(),
+                usageCount,
+                dailyCost,
+                dailyCostLevel,
+                checkedInToday
+        );
+    }
+
+    public List<SubscriptionViewDto> getSubscriptionsWithStats(String userUuid) {
+        return getActiveSubscriptions(userUuid).stream()
+                .map(this::toViewDto)
+                .toList();
+    }
+}

@@ -17,13 +17,16 @@ src/main/java/com/tracker/subscriptionvaluetracker/
 │       ├── UsageLog.java                       # 출석/사용 기록 엔티티
 │       ├── SubscriptionRepository.java         # 구독 JPA Repository
 │       ├── UsageLogRepository.java             # 출석 JPA Repository
-│       ├── SubscriptionService.java            # 비즈니스 로직
+│       ├── SubscriptionService.java            # 구독 비즈니스 로직
+│       ├── CalendarService.java                # 캘린더 비즈니스 로직
 │       ├── SubscriptionController.java         # 구독 CRUD 컨트롤러
 │       ├── SubscriptionForm.java               # 입력 폼 DTO
-│       └── SubscriptionViewDto.java            # 뷰 출력 DTO
+│       ├── SubscriptionViewDto.java            # 뷰 출력 DTO
+│       └── CalendarDayDto.java                 # 캘린더 일자 DTO
 │
 └── web/                                         # 웹 레이어
-    └── DashboardController.java                # 메인 대시보드 컨트롤러
+    ├── DashboardController.java                # 메인 대시보드 컨트롤러
+    └── CalendarController.java                 # 캘린더 컨트롤러
 ```
 
 ### 레이어 설명
@@ -359,6 +362,8 @@ src/main/resources/templates/
 | Method | Endpoint | 설명 | Controller |
 |--------|----------|------|------------|
 | GET | `/` | 대시보드 | DashboardController |
+| GET | `/calendar` | 캘린더 뷰 | CalendarController |
+| GET | `/calendar/grid` | 캘린더 그리드 (HTMX) | CalendarController |
 | GET | `/subscriptions` | 구독 목록 | SubscriptionController |
 | GET | `/subscriptions/new` | 구독 등록 폼 | SubscriptionController |
 | POST | `/subscriptions` | 구독 등록 | SubscriptionController |
@@ -371,10 +376,10 @@ src/main/resources/templates/
 
 ## 8. 향후 개발 예정
 
-### Phase 2: 캘린더 뷰
-- 월간 달력에 출석 기록 표시
-- 이모지 + 일일비용 표시
-- HTMX로 월 이동
+### ~~Phase 2: 캘린더 뷰~~ ✅ 완료
+- ~~월간 달력에 출석 기록 표시~~
+- ~~이모지 + 일일비용 표시~~
+- ~~HTMX로 월 이동~~
 
 ### Phase 3: 투자형 항목
 - Investment 엔티티

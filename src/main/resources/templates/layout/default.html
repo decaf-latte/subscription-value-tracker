@@ -35,9 +35,13 @@
             <a th:href="@{/}" class="text-xl font-semibold hover:text-gray-300 transition">
                 💰 가성비 트래커
             </a>
-            <div class="flex gap-2">
-                <a th:href="@{/subscriptions/new}"
+            <div class="flex gap-3">
+                <a th:href="@{/calendar}"
                    class="px-3 py-1.5 text-sm bg-dark-card rounded-lg border border-dark-border hover:border-gray-600 transition">
+                    📅 캘린더
+                </a>
+                <a th:href="@{/subscriptions/new}"
+                   class="px-3 py-1.5 text-sm bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition">
                     + 구독 추가
                 </a>
             </div>

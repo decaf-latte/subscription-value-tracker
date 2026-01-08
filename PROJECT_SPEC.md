@@ -449,10 +449,10 @@ subscription-value-tracker/
 - [x] DashboardController + SubscriptionController
 
 ### 2주차 (1/13~19): 핵심 기능 + UI
-- [ ] 일일 비용 계산 로직
-- [ ] **캘린더 뷰 구현** (출석/독서 기록 한눈에 보기)
-- [ ] 대시보드 페이지 (요약 카드)
-- [ ] 구독 카드 UI (색상 로직 적용)
+- [x] 일일 비용 계산 로직
+- [x] **캘린더 뷰 구현** (출석/독서 기록 한눈에 보기)
+- [x] 대시보드 페이지 (요약 카드)
+- [x] 구독 카드 UI (색상 로직 적용)
 
 ### 3주차 (1/20~26): 투자형 추가
 - [ ] 투자형 항목 CRUD
@@ -534,3 +534,5 @@ data class ApiResponse<T>(
 | 2025-01-08 | **템플릿 생성**: layout/default.html, index.html (대시보드) |
 | 2025-01-08 | **구독 CRUD 완성**: Subscription/UsageLog 엔티티, Repository, Service, Controller |
 | 2025-01-08 | **템플릿 추가**: subscription/list.html, subscription/form.html |
+| 2025-01-08 | **캘린더 뷰 구현**: CalendarService, CalendarController, calendar.html |
+| 2025-01-08 | **UI 개선**: 기간 유형 드롭다운, 월/회당 환산 금액 자동계산 |

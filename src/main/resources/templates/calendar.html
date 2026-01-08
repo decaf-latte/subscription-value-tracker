@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/default :: layout(~{::title/text()}, ~{::section})}">
+<head>
+    <title>캘린더</title>
+</head>
+<body>
+<section>
+    <div id="calendar-container">
+        <div th:replace="~{fragments/calendar-grid :: calendarGrid}"></div>
+    </div>
+</section>
+</body>
+</html>

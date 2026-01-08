@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>구독 가성비 트래커 - 캘린더 v4 (동일 일일비용)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        dark: {
+                            bg: '#0f0f0f',
+                            card: '#1a1a1a',
+                            border: '#2a2a2a'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .calendar-cell {
+            min-height: 100px;
+        }
+    </style>
+</head>
+<body class="bg-dark-bg text-white min-h-screen">
+    <!-- Header -->
+    <header class="border-b border-dark-border px-6 py-4">
+        <div class="max-w-6xl mx-auto flex items-center justify-between">
+            <h1 class="text-xl font-semibold">💰 가성비 트래커</h1>
+            <div class="flex gap-2">
+                <button class="px-3 py-1.5 text-sm bg-dark-card rounded-lg border border-dark-border hover:border-gray-600 transition">
+                    + 구독 추가
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-6 py-8">
+        <!-- 요약 섹션 -->
+        <section class="mb-6">
+            <div class="grid grid-cols-4 gap-4">
+                <div class="bg-dark-card rounded-2xl p-4 border border-dark-border">
+                    <p class="text-gray-400 text-sm mb-1">이번 달 총 구독료</p>
+                    <p class="text-2xl font-bold">₩56,900</p>
+                </div>
+                <div class="bg-dark-card rounded-2xl p-4 border border-dark-border">
+                    <p class="text-gray-400 text-sm mb-1">평균 일일 비용</p>
+                    <p class="text-2xl font-bold text-emerald-400">₩3,580</p>
+                </div>
+                <div class="bg-dark-card rounded-2xl p-4 border border-dark-border">
+                    <p class="text-gray-400 text-sm mb-1">이번 달 총 사용</p>
+                    <p class="text-2xl font-bold">12<span class="text-base text-gray-500">회</span></p>
+                </div>
+                <div class="bg-dark-card rounded-2xl p-4 border border-dark-border">
+                    <p class="text-gray-400 text-sm mb-1">이북 리더기 절약</p>
+                    <p class="text-2xl font-bold text-emerald-400">+₩127,000</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 일일비용 현황 배너 -->
+        <section class="mb-6 bg-gradient-to-r from-emerald-500/20 to-blue-500/20 rounded-2xl p-4 border border-emerald-500/30">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-6">
+                    <div class="flex items-center gap-2">
+                        <span class="text-2xl">🏋️</span>
+                        <div>
+                            <p class="text-xs text-gray-400">헬스장 (6회 출석)</p>
+                            <p class="text-xl font-bold text-emerald-400">₩5,000<span class="text-sm text-gray-400">/일</span></p>
+                        </div>
+                    </div>
+                    <div class="w-px h-10 bg-white/20"></div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-2xl">🎬</span>
+                        <div>
+                            <p class="text-xs text-gray-400">넷플릭스 (3회 시청)</p>
+                            <p class="text-xl font-bold text-yellow-400">₩5,667<span class="text-sm text-gray-400">/일</span></p>
+                        </div>
+                    </div>
+                    <div class="w-px h-10 bg-white/20"></div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-2xl">📚</span>
+                        <div>
+                            <p class="text-xs text-gray-400">밀리의서재 (3회 독서)</p>
+                            <p class="text-xl font-bold text-yellow-400">₩3,300<span class="text-sm text-gray-400">/일</span></p>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-sm text-gray-400">출석할수록 일일비용 ↓</p>
+            </div>
+        </section>
+
+        <!-- 캘린더 -->
+        <section class="bg-dark-card rounded-2xl border border-dark-border p-6">
+            <!-- 캘린더 헤더 -->
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center gap-4">
+                    <h2 class="text-2xl font-bold">2025년 1월</h2>
+                    <div class="flex gap-1">
+                        <button class="p-2 hover:bg-white/10 rounded-lg transition">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                            </svg>
+                        </button>
+                        <button class="px-3 py-1.5 text-sm bg-white/10 rounded-lg hover:bg-white/20 transition">오늘</button>
+                        <button class="p-2 hover:bg-white/10 rounded-lg transition">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 범례 -->
+                <div class="flex gap-3 text-sm">
+                    <div class="flex items-center gap-1.5 px-2 py-1 bg-orange-500/10 rounded-lg">
+                        <span>🏋️</span>
+                        <span class="text-gray-300 text-xs">헬스장</span>
+                    </div>
+                    <div class="flex items-center gap-1.5 px-2 py-1 bg-red-500/10 rounded-lg">
+                        <span>🎬</span>
+                        <span class="text-gray-300 text-xs">넷플릭스</span>
+                    </div>
+                    <div class="flex items-center gap-1.5 px-2 py-1 bg-blue-500/10 rounded-lg">
+                        <span>📚</span>
+                        <span class="text-gray-300 text-xs">밀리의서재</span>
+                    </div>
+                    <div class="flex items-center gap-1.5 px-2 py-1 bg-purple-500/10 rounded-lg">
+                        <span>📖</span>
+                        <span class="text-gray-300 text-xs">이북리더기</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 요일 헤더 -->
+            <div class="grid grid-cols-7 mb-2 border-b border-dark-border pb-2">
+                <div class="text-center text-sm font-medium text-red-400 py-2">일</div>
+                <div class="text-center text-sm font-medium text-gray-400 py-2">월</div>
+                <div class="text-center text-sm font-medium text-gray-400 py-2">화</div>
+                <div class="text-center text-sm font-medium text-gray-400 py-2">수</div>
+                <div class="text-center text-sm font-medium text-gray-400 py-2">목</div>
+                <div class="text-center text-sm font-medium text-gray-400 py-2">금</div>
+                <div class="text-center text-sm font-medium text-blue-400 py-2">토</div>
+            </div>
+
+            <!-- 캘린더 그리드 -->
+            <!-- 
+                헬스장: 1/1, 1/2, 1/5, 1/6, 1/8, 1/9 = 6회 → 30,000 ÷ 6 = ₩5,000 (모두 동일)
+                넷플릭스: 1/3, 1/10, 1/17 = 3회 → 17,000 ÷ 3 = ₩5,667 (모두 동일)
+                밀리의서재: 1/6, 1/9, 1/15 = 3회 → 9,900 ÷ 3 = ₩3,300 (모두 동일)
+            -->
+            <div class="grid grid-cols-7 gap-1">
+                <!-- 이전 달 -->
+                <div class="calendar-cell p-2 text-gray-600 rounded-lg">
+                    <span class="text-sm">29</span>
+                </div>
+                <div class="calendar-cell p-2 text-gray-600 rounded-lg">
+                    <span class="text-sm">30</span>
+                </div>
+                <div class="calendar-cell p-2 text-gray-600 rounded-lg">
+                    <span class="text-sm">31</span>
+                </div>
+                
+                <!-- 1일 수요일 - 헬스장 -->
+                <div class="calendar-cell p-2 rounded-lg hover:bg-white/5 cursor-pointer border border-transparent hover:border-gray-700 transition">
+                    <div class="text-sm font-medium mb-2">1</div>
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-1.5 text-xs bg-emerald-500/20 text-emerald-300 px-2 py-1 rounded-md">
+                            <span>🏋️</span>
+                            <span class="font-medium">₩5,000</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2일 목요일 - 헬스장, 이북 -->
+                <div class="calendar-cell p-2 rounded-lg hover:bg-white/5 cursor-pointer border border-transparent hover:border-gray-700 transition">
+                    <div class="text-sm font-medium mb-2">2</div>
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-1.5 text-xs bg-emerald-500/20 text-emerald-300 px-2 py-1 rounded-md">
+                            <span>🏋️</span>
+                            <span class="font-medium">₩5,000</span>
+                        </div>
+                        <div class="flex items-center gap-1.5 text-xs bg-purple-500/20 text-purple-300 px-2 py-1 rounded-md">
+                            <span>📖</span>
+                            <span class="font-medium truncate">클린코드</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3일 금요일 - 넷플릭스 -->
+                <div class="calendar-cell p-2 rounded-lg hover:bg-white/5 cursor-pointer border border-transparent hover:border-gray-700 transition">
+                    <div class="text-sm font-medium mb-2">3</div>
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-1.5 text-xs bg-yellow-500/20 text-yellow-300 px-2 py-1 rounded-md">
+                            <span>🎬</span>
+                            <span class="font-medium">₩5,667</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4일 토요일 -->
+                <div class="calendar-cell p-2 rounded-lg hover:bg-white/5 cursor-pointer border border-transparent hover:border-gray-700 transition">
+                    <div class="text-sm font-medium text-blue-400 mb-2">4</div>
+                </div>
+
+                <!-- 2주차 -->
+                <!-- 5일 일요일 - 헬스장 -->
+                <div class="calendar-cell p-2 rounded-lg hover:bg-white/5 cursor-pointer border border-transparent hover:border-gray-700 transition">
+                    <div class="text-sm font-medium text-red-400 mb-2">5</div>
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-1.5 text-xs bg-emerald-500/20 text-emerald-300 px-2 py-1 rounded-md">
+                            <span>🏋️</span>
+                            <span class="font-medium">₩5,000</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 6일 월요일 (오늘) - 헬스장, 밀리 -->
+                <div class="calendar-cell p-2 rounded-xl bg-white/10 ring-2 ring-emerald-500 cursor-pointer">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-bold">6</span>
+                        <span class="text-xs bg-emerald-500 text-white px-1.5 py-0.5 rounded">오늘</span>
+                    </div>
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-1.5 text-xs bg-emerald-500/30 text-emerald-200 px-2 py-1 rounded-md">
+                            <span>🏋️</span>
+                            <span class="font-semibold">₩5,000</span>
+                        </div>
+                        <div class="flex items-center gap-1.5 text-xs bg-yellow-500/30 text-yellow-200 px-2 py-1 rounded-md">
+                            <span>📚</span>
+                            <span class="font-semibold">₩3,300</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 7일 화요일 -->
+                <div class="calendar-cell p-2 rounded-lg hover:bg-white/5 cursor-pointer border border-transparent hover:border-gray-700 transition">
+                    <div class="text-sm font-medium mb-2">7</div>
+                </div>
+
+                <!-- 8일 수요일 - 헬스장 -->
+                <div class="calendar-cell p-2 rounded-lg hover:bg-white/5 cursor-pointer border border-transparent hover:border-gray-700 transition">
+                    <div class="text-sm font-medium mb-2">8</div>
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-1.5 text-xs bg-emerald-500/20 text-emerald-300 px-2 py-1 rounded-md">
+                            <span>🏋️</span>
+                            <span class="font-medium">₩5,000</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 9일 목요일 - 헬스장, 밀리, 이북 -->
+                <div class="calendar-cell p-2 rounded-lg hover:bg-white/5 cursor-pointer border border-transparent hover:border-gray-700 transition">
+                    <div class="text-sm font-medium mb-2">9</div>
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-1.5 text-xs bg-emerald-500/20 text-emerald-300 px-2 py-1 rounded-md">
+                            <span>🏋️</span>
+                            <span class="font-medium">₩5,000</span>
+                        </div>
+                        <div class="flex items-center gap-1.5 text-xs bg-yellow-500/20 text-yellow-300 px-2 py-1 rounded-md">
+                            <span>📚</span>
+                            <span class="font-medium">₩3,300</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 10일 금요일 - 넷플릭스 -->
+                <div class="calendar-cell p-2 rounded-lg hover:bg-white/5 cursor-pointer border border-transparent hover:border-gray-700 transition">
+                    <div class="text-sm font-medium mb-2">10</div>
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-1.5 text-xs bg-yellow-500/20 text-yellow-300 px-2 py-1 rounded-md">
+                            <span>🎬</span>
+                            <span class="font-medium">₩5,667</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 11일 토요일 -->
+                <div class="calendar-cell p-2 rounded-lg hover:bg-white/5 cursor-pointer border border-transparent hover:border-gray-700 transition">
+                    <div class="text-sm font-medium text-blue-400 mb-2">11</div>
+                </div>
+
+                <!-- 3주차 -->
+                <!-- 12~18일 -->
+                <div class="calendar-cell p-2 rounded-lg hover:bg-white/5 cursor-pointer border border-transparent hover:border-gray-700 transition">
+                    <div class="text-sm font-medium text-red-400 mb-2">12</div>
+                </div>
+                <div class="calendar-cell p-2 rounded-lg hover:bg-white/5 cursor-pointer border border-transparent hover:border-gray-700 transition">
+                    <div class="text-sm font-medium mb-2">13</div>
+                </div>
+                <div class="calendar-cell p-2 rounded-lg hover:bg-white/5 cursor-pointer border border-transparent hover:border-gray-700 transition">
+                    <div class="text-sm font-medium mb-2">14</div>
+                </div>
+                <!-- 15일 - 밀리 -->
+                <div class="calendar-cell p-2 rounded-lg hover:bg-white/5 cursor-pointer border border-transparent hover:border-gray-700 transition">
+                    <div class="text-sm font-medium mb-2">15</div>
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-1.5 text-xs bg-yellow-500/20 text-yellow-300 px-2 py-1 rounded-md">
+                            <span>📚</span>
+                            <span class="font-medium">₩3,300</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="calendar-cell p-2 rounded-lg hover:bg-white/5 cursor-pointer border border-transparent hover:border-gray-700 transition">
+                    <div class="text-sm font-medium mb-2">16</div>
+                </div>
+                <!-- 17일 - 넷플릭스 -->
+                <div class="calendar-cell p-2 rounded-lg hover:bg-white/5 cursor-pointer border border-transparent hover:border-gray-700 transition">
+                    <div class="text-sm font-medium mb-2">17</div>
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-1.5 text-xs bg-yellow-500/20 text-yellow-300 px-2 py-1 rounded-md">
+                            <span>🎬</span>
+                            <span class="font-medium">₩5,667</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="calendar-cell p-2 rounded-lg hover:bg-white/5 cursor-pointer border border-transparent hover:border-gray-700 transition">
+                    <div class="text-sm font-medium text-blue-400 mb-2">18</div>
+                </div>
+
+                <!-- 4주차 -->
+                <div class="calendar-cell p-2 rounded-lg hover:bg-white/5 cursor-pointer border border-transparent hover:border-gray-700 transition opacity-50">
+                    <div class="text-sm font-medium text-red-400 mb-2">19</div>
+                </div>
+                <div class="calendar-cell p-2 rounded-lg opacity-50"><div class="text-sm font-medium mb-2">20</div></div>
+                <div class="calendar-cell p-2 rounded-lg opacity-50"><div class="text-sm font-medium mb-2">21</div></div>
+                <div class="calendar-cell p-2 rounded-lg opacity-50"><div class="text-sm font-medium mb-2">22</div></div>
+                <div class="calendar-cell p-2 rounded-lg opacity-50"><div class="text-sm font-medium mb-2">23</div></div>
+                <div class="calendar-cell p-2 rounded-lg opacity-50"><div class="text-sm font-medium mb-2">24</div></div>
+                <div class="calendar-cell p-2 rounded-lg opacity-50"><div class="text-sm font-medium text-blue-400 mb-2">25</div></div>
+
+                <!-- 5주차 -->
+                <div class="calendar-cell p-2 rounded-lg opacity-50"><div class="text-sm font-medium text-red-400 mb-2">26</div></div>
+                <div class="calendar-cell p-2 rounded-lg opacity-50"><div class="text-sm font-medium mb-2">27</div></div>
+                <div class="calendar-cell p-2 rounded-lg opacity-50"><div class="text-sm font-medium mb-2">28</div></div>
+                <div class="calendar-cell p-2 rounded-lg opacity-50"><div class="text-sm font-medium mb-2">29</div></div>
+                <div class="calendar-cell p-2 rounded-lg opacity-50"><div class="text-sm font-medium mb-2">30</div></div>
+                <div class="calendar-cell p-2 rounded-lg opacity-50"><div class="text-sm font-medium mb-2">31</div></div>
+                <div class="calendar-cell p-2 text-gray-600 rounded-lg"><span class="text-sm">1</span></div>
+            </div>
+        </section>
+
+        <!-- 하단: 이번 달 요약 카드 -->
+        <section class="mt-6 grid grid-cols-4 gap-4">
+            <!-- 헬스장 -->
+            <div class="bg-dark-card rounded-2xl p-4 border border-dark-border">
+                <div class="flex items-center gap-3 mb-3">
+                    <span class="text-2xl">🏋️</span>
+                    <div>
+                        <h3 class="font-semibold">헬스장</h3>
+                        <p class="text-xs text-gray-400">월 ₩30,000</p>
+                    </div>
+                </div>
+                <div class="flex justify-between items-end">
+                    <div>
+                        <p class="text-3xl font-bold">6<span class="text-sm text-gray-500">회</span></p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-xs text-gray-400">일일 비용</p>
+                        <p class="text-xl font-bold text-emerald-400">₩5,000</p>
+                    </div>
+                </div>
+                <button class="w-full mt-3 py-2 bg-emerald-500/20 text-emerald-400 rounded-xl text-sm font-medium hover:bg-emerald-500/30 transition">
+                    ✓ 오늘 출석
+                </button>
+            </div>
+
+            <!-- 넷플릭스 -->
+            <div class="bg-dark-card rounded-2xl p-4 border border-dark-border">
+                <div class="flex items-center gap-3 mb-3">
+                    <span class="text-2xl">🎬</span>
+                    <div>
+                        <h3 class="font-semibold">넷플릭스</h3>
+                        <p class="text-xs text-gray-400">월 ₩17,000</p>
+                    </div>
+                </div>
+                <div class="flex justify-between items-end">
+                    <div>
+                        <p class="text-3xl font-bold">3<span class="text-sm text-gray-500">회</span></p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-xs text-gray-400">일일 비용</p>
+                        <p class="text-xl font-bold text-yellow-400">₩5,667</p>
+                    </div>
+                </div>
+                <button class="w-full mt-3 py-2 bg-white/10 text-white rounded-xl text-sm font-medium hover:bg-white/20 transition">
+                    + 시청 기록
+                </button>
+            </div>
+
+            <!-- 밀리의서재 -->
+            <div class="bg-dark-card rounded-2xl p-4 border border-dark-border">
+                <div class="flex items-center gap-3 mb-3">
+                    <span class="text-2xl">📚</span>
+                    <div>
+                        <h3 class="font-semibold">밀리의서재</h3>
+                        <p class="text-xs text-gray-400">월 ₩9,900</p>
+                    </div>
+                </div>
+                <div class="flex justify-between items-end">
+                    <div>
+                        <p class="text-3xl font-bold">3<span class="text-sm text-gray-500">회</span></p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-xs text-gray-400">일일 비용</p>
+                        <p class="text-xl font-bold text-yellow-400">₩3,300</p>
+                    </div>
+                </div>
+                <button class="w-full mt-3 py-2 bg-white/10 text-white rounded-xl text-sm font-medium hover:bg-white/20 transition">
+                    + 독서 기록
+                </button>
+            </div>
+
+            <!-- 이북 리더기 -->
+            <div class="bg-dark-card rounded-2xl p-4 border border-emerald-500/30">
+                <div class="flex items-center gap-3 mb-3">
+                    <span class="text-2xl">📖</span>
+                    <div>
+                        <h3 class="font-semibold">크레마 카르타</h3>
+                        <p class="text-xs text-gray-400">구매가 ₩189,000</p>
+                    </div>
+                </div>
+                <div class="flex justify-between items-end">
+                    <div>
+                        <p class="text-3xl font-bold">23<span class="text-sm text-gray-500">권</span></p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-xs text-gray-400">순이익</p>
+                        <p class="text-xl font-bold text-emerald-400">+₩127,000</p>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <div class="h-2 bg-dark-border rounded-full overflow-hidden">
+                        <div class="h-full bg-gradient-to-r from-emerald-500 to-emerald-300 rounded-full" style="width: 100%"></div>
+                    </div>
+                    <p class="text-xs text-emerald-400 mt-1 text-center">167% 달성 🎉</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 설명 -->
+        <section class="mt-6 p-4 bg-white/5 rounded-xl text-sm text-gray-400">
+            <p><strong class="text-white">💡 일일 비용 계산 방식:</strong> 월 구독료 ÷ 이번 달 총 사용 횟수</p>
+            <p class="mt-1">출석을 추가하면 해당 서비스의 <strong class="text-emerald-400">모든 출석일 금액이 동시에 업데이트</strong>됩니다.</p>
+            <p class="mt-1">예: 헬스장 7번째 출석 → 1/1, 1/2, 1/5, 1/6, 1/8, 1/9 + 오늘 모두 ₩4,286으로 변경</p>
+        </section>
+    </main>
+</body>
+</html>

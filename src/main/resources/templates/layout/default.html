@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" th:fragment="layout(pageTitle, content)">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle} ? ${pageTitle} + ' - 가성비 트래커' : '가성비 트래커'">가성비 트래커</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        dark: {
+                            bg: '#0f0f0f',
+                            card: '#1a1a1a',
+                            border: '#2a2a2a'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .calendar-cell { min-height: 100px; }
+    </style>
+</head>
+<body class="bg-dark-bg text-white min-h-screen flex flex-col">
+    <!-- Header -->
+    <header class="border-b border-dark-border px-6 py-4">
+        <div class="max-w-6xl mx-auto flex items-center justify-between">
+            <a th:href="@{/}" class="text-xl font-semibold hover:text-gray-300 transition">
+                💰 가성비 트래커
+            </a>
+            <div class="flex gap-2">
+                <a th:href="@{/subscriptions/new}"
+                   class="px-3 py-1.5 text-sm bg-dark-card rounded-lg border border-dark-border hover:border-gray-600 transition">
+                    + 구독 추가
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-6xl mx-auto px-6 py-8 flex-1 w-full">
+        <th:block th:replace="${content}" />
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-dark-border px-6 py-4">
+        <div class="max-w-6xl mx-auto text-center text-sm text-gray-500">
+            구독 가성비 트래커 &copy; 2025
+        </div>
+    </footer>
+</body>
+</html>

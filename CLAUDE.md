@@ -1,0 +1,104 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project Overview
+
+구독 가성비 트래커 (Subscription Value Tracker) - A web application that calculates the cost-per-use value of subscription services and fixed investments. Core concept: "출석할수록 금액이 내려가는 걸 눈으로 보면서 뿌듯함 느끼기" (Feel motivated watching daily costs decrease with each usage).
+
+## Tech Stack
+
+- **Language**: Java 21
+- **Framework**: Spring Boot 4.x
+- **Template Engine**: Thymeleaf + HTMX (no separate frontend build)
+- **Database**: H2 (dev) / MySQL (prod)
+- **ORM**: Spring Data JPA
+- **Styling**: Tailwind CSS (CDN)
+- **Build Tool**: Gradle (Groovy DSL)
+
+## Common Commands
+
+```bash
+# Run development server
+./gradlew bootRun
+
+# Run tests
+./gradlew test
+
+# Build
+./gradlew build
+
+# Access application at http://localhost:8080
+```
+
+## Architecture
+
+Single Spring Boot project with server-side rendering:
+
+```
+src/main/java/com/tracker/subscriptionvaluetracker/
+├── domain/
+│   ├── subscription/     # Subscription entity, repository, service, controller
+│   └── investment/       # Investment entity, repository, service, controller
+└── web/                  # Dashboard and page controllers
+
+src/main/resources/
+├── templates/            # Thymeleaf templates
+│   ├── layout/          # Common layouts
+│   ├── subscription/    # Subscription CRUD views
+│   ├── investment/      # Investment CRUD views
+│   └── fragments/       # Reusable components
+└── static/              # Static assets
+```
+
+## Key Domain Concepts
+
+### Subscription (구독)
+- Monthly subscription services (gym, Netflix, etc.)
+- Tracks usage/attendance via `UsageLog`
+- **Daily Cost Calculation**: `monthlyAmount ÷ usageCountThisMonth`
+- All usage dates show the same calculated daily cost (updates when new usage added)
+
+### Investment (투자)
+- One-time purchases with ongoing savings tracking (e-reader, annual pass)
+- Tracks break-even point and total savings
+- Compares original vs actual price per use
+
+### User Identification
+- UUID + Cookie-based (no login required)
+- 30-day cookie expiration
+- All queries filter by `user_uuid`
+
+## Key Business Logic
+
+- Use `BigDecimal` for all monetary calculations
+- Daily cost color coding: Green (good value) / Yellow (normal) / Red (warning)
+- Emoji codes stored in DB, converted to emoji on frontend (e.g., "gym" → "🏋️")
+- HTMX for partial page updates on attendance check (refreshes entire calendar)
+
+## Git Workflow
+
+**브랜치 전략:**
+- `master`: 안정 버전
+- `dev`: 개발 통합 브랜치
+- `feature/*`: 기능별 브랜치 (예: `feature/subscription-crud`)
+
+**작업 완료 시 Git 프로세스:**
+1. 태스크별 feature 브랜치 생성: `git checkout -b feature/태스크명`
+2. 작업 완료 후 커밋: 작업 내용 요약을 커밋 메시지로
+3. dev 브랜치로 머지 후 푸시
+4. PRD.md, PROJECT_SPEC.md 체크리스트 업데이트
+
+**커밋 메시지 형식:**
+```
+[태스크] 작업 요약
+
+- 세부 변경사항 1
+- 세부 변경사항 2
+```
+
+## Reference Documents
+
+- `PRD.md` - Product requirements document
+- `PROJECT_SPEC.md` - Technical specifications with data models and API design
+- `wireframe-v4-calendar.html` - UI wireframe reference

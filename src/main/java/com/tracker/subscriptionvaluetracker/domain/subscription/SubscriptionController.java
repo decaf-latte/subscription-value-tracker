@@ -9,6 +9,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Controller
@@ -89,17 +90,23 @@ public class SubscriptionController {
 
     @PostMapping("/{id}/check-in")
     public String checkIn(@PathVariable Long id,
+                          @RequestParam(required = false) String date,
                           @RequestParam(required = false) String returnUrl,
                           HttpServletRequest request,
                           HttpServletResponse response,
                           RedirectAttributes redirectAttributes) {
         String userUuid = UserIdentifier.getUserUuid(request, response);
-        try {
-            subscriptionService.checkIn(id, userUuid);
+
+        LocalDate checkInDate = (date != null) ? LocalDate.parse(date) : LocalDate.now();
+
+        boolean checkedIn = subscriptionService.toggleCheckIn(id, userUuid, checkInDate);
+
+        if (checkedIn) {
             redirectAttributes.addFlashAttribute("message", "출석 완료!");
-        } catch (IllegalStateException e) {
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        } else {
+            redirectAttributes.addFlashAttribute("message", "출석이 취소되었습니다.");
         }
+
         return "redirect:" + (returnUrl != null ? returnUrl : "/calendar");
     }
 }

@@ -75,18 +75,39 @@ public class SubscriptionService {
 
     @Transactional
     public UsageLog checkIn(Long subscriptionId, String userUuid) {
-        Subscription subscription = subscriptionRepository.findByIdAndUserUuid(subscriptionId, userUuid)
+        return checkInOnDate(subscriptionId, userUuid, LocalDate.now());
+    }
+
+    @Transactional
+    public UsageLog checkInOnDate(Long subscriptionId, String userUuid, LocalDate date) {
+        subscriptionRepository.findByIdAndUserUuid(subscriptionId, userUuid)
                 .orElseThrow(() -> new IllegalArgumentException("구독을 찾을 수 없습니다."));
 
-        LocalDate today = LocalDate.now();
-
-        // 이미 오늘 출석했는지 확인
-        if (usageLogRepository.existsBySubscriptionIdAndUsedAt(subscriptionId, today)) {
-            throw new IllegalStateException("오늘 이미 출석했습니다.");
+        // 이미 해당 날짜에 출석했는지 확인
+        if (usageLogRepository.existsBySubscriptionIdAndUsedAt(subscriptionId, date)) {
+            throw new IllegalStateException("해당 날짜에 이미 출석했습니다.");
         }
 
-        UsageLog usageLog = new UsageLog(subscriptionId, today);
+        UsageLog usageLog = new UsageLog(subscriptionId, date);
         return usageLogRepository.save(usageLog);
+    }
+
+    @Transactional
+    public boolean toggleCheckIn(Long subscriptionId, String userUuid, LocalDate date) {
+        subscriptionRepository.findByIdAndUserUuid(subscriptionId, userUuid)
+                .orElseThrow(() -> new IllegalArgumentException("구독을 찾을 수 없습니다."));
+
+        Optional<UsageLog> existingLog = usageLogRepository.findBySubscriptionIdAndUsedAt(subscriptionId, date);
+
+        if (existingLog.isPresent()) {
+            // 이미 출석했으면 취소
+            usageLogRepository.delete(existingLog.get());
+            return false; // 출석 취소됨
+        } else {
+            // 출석 안했으면 출석
+            usageLogRepository.save(new UsageLog(subscriptionId, date));
+            return true; // 출석 완료
+        }
     }
 
     @Transactional

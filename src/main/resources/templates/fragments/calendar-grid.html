@@ -57,8 +57,8 @@
         <!-- 캘린더 그리드 -->
         <div class="grid grid-cols-7 gap-1">
             <div th:each="day : ${calendarDays}"
-                 th:classappend="${day.today} ? 'bg-white/10 ring-2 ring-emerald-500 rounded-xl' : 'rounded-lg hover:bg-white/5 border border-transparent hover:border-gray-700'"
-                 class="calendar-cell p-2 cursor-pointer transition min-h-[100px]"
+                 th:data-date="${day.date}"
+                 th:onclick="${day.currentMonth} ? 'openModal(\'' + ${day.date} + '\')' : ''"
                  th:class="${not day.currentMonth} ? 'calendar-cell p-2 text-gray-600 rounded-lg min-h-[100px]' : 'calendar-cell p-2 cursor-pointer transition min-h-[100px] ' + (${day.today} ? 'bg-white/10 ring-2 ring-emerald-500 rounded-xl' : 'rounded-lg hover:bg-white/5 border border-transparent hover:border-gray-700')">
 
                 <!-- 날짜 표시 -->
@@ -90,6 +90,7 @@
     <div class="mt-6 p-4 bg-white/5 rounded-xl text-sm text-gray-400">
         <p><strong class="text-white">💡 일일 비용 계산 방식:</strong> 월 구독료 ÷ 이번 달 총 사용 횟수</p>
         <p class="mt-1">출석을 추가하면 해당 서비스의 <strong class="text-emerald-400">모든 출석일 금액이 동시에 업데이트</strong>됩니다.</p>
+        <p class="mt-1"><strong class="text-white">📅 날짜 클릭:</strong> 캘린더의 날짜를 클릭하면 해당 날짜에 출석 체크할 수 있습니다.</p>
     </div>
 </div>
 </body>

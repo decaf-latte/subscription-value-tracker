@@ -39,14 +39,24 @@
 
             <!-- 기간 유형 -->
             <div>
-                <label for="periodType" class="block text-sm font-medium text-gray-300 mb-2">기간 유형</label>
-                <input type="text" id="periodType" th:field="*{periodType}"
-                       placeholder="월간, 3개월, 12개월, 30회 등"
-                       required
-                       onchange="calculateMonthlyAmount()"
-                       oninput="calculateMonthlyAmount()"
-                       class="w-full px-4 py-3 bg-dark-card border border-dark-border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 transition">
-                <p class="mt-1 text-xs text-gray-500">예: 월간, 3개월, 12개월, 30회권</p>
+                <label class="block text-sm font-medium text-gray-300 mb-2">기간 유형</label>
+                <div class="flex gap-2">
+                    <input type="number" id="periodNumber"
+                           placeholder="1"
+                           required min="1"
+                           onchange="updatePeriodType()"
+                           oninput="updatePeriodType()"
+                           class="w-24 px-4 py-3 bg-dark-card border border-dark-border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 transition text-center">
+                    <select id="periodUnit"
+                            onchange="updatePeriodType()"
+                            class="flex-1 px-4 py-3 bg-dark-card border border-dark-border rounded-xl text-white focus:outline-none focus:border-emerald-500 transition">
+                        <option value="개월">개월</option>
+                        <option value="회">회</option>
+                    </select>
+                </div>
+                <!-- 실제 전송될 hidden 필드 -->
+                <input type="hidden" id="periodType" th:field="*{periodType}">
+                <p class="mt-1 text-xs text-gray-500">예: 1개월, 3개월, 12개월, 30회</p>
             </div>
 
             <!-- 금액 -->
@@ -108,45 +118,78 @@
     </div>
 
     <script>
+        // 기간 유형 업데이트 (숫자 + 단위 → periodType)
+        function updatePeriodType() {
+            const periodNumber = document.getElementById('periodNumber').value;
+            const periodUnit = document.getElementById('periodUnit').value;
+            const periodTypeInput = document.getElementById('periodType');
+
+            if (periodNumber) {
+                periodTypeInput.value = periodNumber + periodUnit;
+            }
+
+            calculateMonthlyAmount();
+        }
+
+        // 월환산 금액 계산
         function calculateMonthlyAmount() {
             const totalAmount = document.getElementById('totalAmount').value;
-            const periodType = document.getElementById('periodType').value;
+            const periodNumber = document.getElementById('periodNumber').value;
+            const periodUnit = document.getElementById('periodUnit').value;
             const monthlyAmountInput = document.getElementById('monthlyAmount');
 
-            if (!totalAmount || !periodType) {
+            if (!totalAmount || !periodNumber) {
                 return;
             }
 
-            const months = parseMonths(periodType);
+            let months = 1;
+            if (periodUnit === '개월') {
+                months = parseInt(periodNumber);
+            } else {
+                // 회차 기반은 1개월로 간주
+                months = 1;
+            }
+
             const monthlyAmount = Math.round(totalAmount / months);
             monthlyAmountInput.value = monthlyAmount;
         }
 
-        function parseMonths(periodType) {
-            // "월간" = 1개월
-            if (periodType === '월간' || periodType === '월' || periodType === '1개월') {
-                return 1;
+        // 기존 periodType 파싱하여 필드에 채우기 (수정 모드)
+        function parsePeriodType() {
+            const periodTypeInput = document.getElementById('periodType');
+            const periodNumberInput = document.getElementById('periodNumber');
+            const periodUnitSelect = document.getElementById('periodUnit');
+            const periodType = periodTypeInput.value;
+
+            if (!periodType) {
+                periodNumberInput.value = 1;
+                return;
             }
 
-            // "N개월" 패턴 추출 (예: "3개월", "12개월")
+            // "N개월" 패턴
             const monthMatch = periodType.match(/(\d+)\s*개월/);
             if (monthMatch) {
-                return parseInt(monthMatch[1]);
+                periodNumberInput.value = parseInt(monthMatch[1]);
+                periodUnitSelect.value = '개월';
+                return;
             }
 
-            // "N년" 패턴 (예: "1년")
-            const yearMatch = periodType.match(/(\d+)\s*년/);
-            if (yearMatch) {
-                return parseInt(yearMatch[1]) * 12;
+            // "N회" 패턴
+            const countMatch = periodType.match(/(\d+)\s*회/);
+            if (countMatch) {
+                periodNumberInput.value = parseInt(countMatch[1]);
+                periodUnitSelect.value = '회';
+                return;
             }
 
-            // "N회", "N회권" 등은 1개월로 간주 (회차 기반 구독)
-            // 기본값: 1개월
-            return 1;
+            // "월간" 등 기본값
+            periodNumberInput.value = 1;
+            periodUnitSelect.value = '개월';
         }
 
-        // 페이지 로드 시 기존 값이 있으면 계산
+        // 페이지 로드 시 초기화
         document.addEventListener('DOMContentLoaded', function() {
+            parsePeriodType();
             calculateMonthlyAmount();
         });
     </script>

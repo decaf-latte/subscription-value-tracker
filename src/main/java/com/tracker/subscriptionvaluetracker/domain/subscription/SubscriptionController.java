@@ -45,7 +45,7 @@ public class SubscriptionController {
         String userUuid = UserIdentifier.getUserUuid(request, response);
         subscriptionService.createSubscription(userUuid, form);
         redirectAttributes.addFlashAttribute("message", "구독이 등록되었습니다.");
-        return "redirect:/";
+        return "redirect:/calendar";
     }
 
     @GetMapping("/{id}/edit")
@@ -73,7 +73,7 @@ public class SubscriptionController {
         String userUuid = UserIdentifier.getUserUuid(request, response);
         subscriptionService.updateSubscription(id, userUuid, form);
         redirectAttributes.addFlashAttribute("message", "구독이 수정되었습니다.");
-        return "redirect:/";
+        return "redirect:/calendar";
     }
 
     @PostMapping("/{id}/delete")
@@ -84,7 +84,7 @@ public class SubscriptionController {
         String userUuid = UserIdentifier.getUserUuid(request, response);
         subscriptionService.deleteSubscription(id, userUuid);
         redirectAttributes.addFlashAttribute("message", "구독이 삭제되었습니다.");
-        return "redirect:/";
+        return "redirect:/calendar";
     }
 
     @PostMapping("/{id}/check-in")

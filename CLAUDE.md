@@ -55,9 +55,9 @@ src/main/resources/templates/
 ### Subscription (구독)
 - Monthly subscription services (gym, Netflix, etc.)
 - Tracks usage/attendance via `UsageLog`
-- **Cost Per Use Calculation**: `(monthlyAmount × monthsSinceStart) ÷ totalUsageCount`
-  - 구독 시작월부터 현재월까지의 총 지불액을 총 사용 횟수로 나눔
-  - 예: 월 10,000원, 1월 4회 + 2월 1회 = 총 5회 → (10,000 × 2) / 5 = 4,000원/회
+- **Cost Per Use Calculation**: `totalAmount ÷ totalUsageCount`
+  - 구독 총 금액을 총 사용 횟수로 나눔
+  - 예: 총 180,000원 (12개월), 10회 사용 → 180,000 / 10 = 18,000원/회
 - All usage dates (across all months) show the same calculated cost (updates when new usage added)
 
 ### Investment (투자)
@@ -139,9 +139,30 @@ src/test/java/com/tracker/subscriptionvaluetracker/
 - `리팩토링`: 코드 개선
 - `테스트`: 테스트 추가/수정
 
+## QA Process
+
+**기능 개발 완료 후 QA 안내:**
+- 기능 개발이 완료되면 사용자에게 QA 테스트 항목을 안내해야 함
+- 테스트 시나리오와 확인해야 할 항목을 명확하게 제시
+
+**QA 안내 예시:**
+```
+### 확인 필요한 항목
+| 기능 | 테스트 방법 |
+|------|------------|
+| 구독 상세 페이지 | 대시보드에서 구독 카드 클릭 → 상세 페이지 이동 확인 |
+| 구독 수정 | 상세 페이지 → "수정" 버튼 → 폼에서 수정 → 저장 |
+```
+
+**QA 결과 문서화:**
+- 사용자가 QA 결과를 제공하면 `QA_RESULTS.md`에 기록
+- 발견된 버그는 즉시 수정하거나 미해결 이슈로 기록
+- QA 이력을 날짜별로 관리
+
 ## Reference Documents
 
 - `PRD.md` - Product requirements document
 - `PROJECT_SPEC.md` - Technical specifications with data models and API design
 - `DEVELOPMENT.md` - 개발 문서 (패키지 구조, ERD, 플로우차트, 시퀀스 다이어그램)
+- `QA_RESULTS.md` - QA 테스트 결과 기록
 - `wireframe-v4-calendar.html` - UI wireframe reference

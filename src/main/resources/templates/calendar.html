@@ -109,8 +109,20 @@
     </div>
 
     <!-- 구독 데이터를 JavaScript에서 사용하기 위한 hidden 데이터 -->
-    <script th:inline="javascript">
-        var subscriptionData = /*[[${subscriptions}]]*/ [];
+    <script th:if="${not #lists.isEmpty(subscriptions)}">
+        var subscriptionData = [
+            <th:block th:each="sub, stat : ${subscriptions}">
+            {
+                id: [[${sub.id}]],
+                name: '[[${sub.name}]]',
+                emoji: '[[${sub.emoji}]]',
+                monthlyAmount: [[${sub.monthlyAmount}]]
+            }<th:block th:if="${!stat.last}">,</th:block>
+            </th:block>
+        ];
+    </script>
+    <script th:if="${#lists.isEmpty(subscriptions)}">
+        var subscriptionData = [];
     </script>
     <script>
         function openModal(date) {
@@ -179,6 +191,17 @@
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 closeModal();
+            }
+        });
+
+        // 캘린더 날짜 클릭 이벤트 (이벤트 위임)
+        document.addEventListener('click', function(e) {
+            var dateCell = e.target.closest('.clickable-date');
+            if (dateCell) {
+                var date = dateCell.getAttribute('data-date');
+                if (date) {
+                    openModal(date);
+                }
             }
         });
     </script>

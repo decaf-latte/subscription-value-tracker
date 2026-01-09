@@ -30,6 +30,23 @@ public class SubscriptionController {
         return "subscription/list";
     }
 
+    @GetMapping("/{id}")
+    public String detail(@PathVariable Long id,
+                         Model model,
+                         HttpServletRequest request,
+                         HttpServletResponse response) {
+        String userUuid = UserIdentifier.getUserUuid(request, response);
+        Subscription subscription = subscriptionService.getSubscription(id, userUuid)
+                .orElseThrow(() -> new IllegalArgumentException("구독을 찾을 수 없습니다."));
+
+        SubscriptionViewDto dto = subscriptionService.toViewDto(subscription);
+        List<UsageLog> usageLogs = subscriptionService.getRecentUsageLogs(id);
+
+        model.addAttribute("subscription", dto);
+        model.addAttribute("usageLogs", usageLogs);
+        return "subscription/detail";
+    }
+
     @GetMapping("/new")
     public String newForm(Model model) {
         model.addAttribute("form", new SubscriptionForm());
@@ -74,7 +91,7 @@ public class SubscriptionController {
         String userUuid = UserIdentifier.getUserUuid(request, response);
         subscriptionService.updateSubscription(id, userUuid, form);
         redirectAttributes.addFlashAttribute("message", "구독이 수정되었습니다.");
-        return "redirect:/calendar";
+        return "redirect:/subscriptions/" + id;
     }
 
     @PostMapping("/{id}/delete")
@@ -85,7 +102,7 @@ public class SubscriptionController {
         String userUuid = UserIdentifier.getUserUuid(request, response);
         subscriptionService.deleteSubscription(id, userUuid);
         redirectAttributes.addFlashAttribute("message", "구독이 삭제되었습니다.");
-        return "redirect:/calendar";
+        return "redirect:/";
     }
 
     @PostMapping("/{id}/check-in")

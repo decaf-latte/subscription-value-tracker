@@ -144,13 +144,8 @@ public class CalendarService {
             return subscription.getMonthlyAmount();
         }
 
-        // 구독 시작월부터 현재월까지 몇 개월인지 계산
-        YearMonth startMonth = YearMonth.from(subscription.getStartDate());
-        YearMonth currentMonth = YearMonth.now();
-        long monthsPaid = startMonth.until(currentMonth, java.time.temporal.ChronoUnit.MONTHS) + 1;
-
-        // 총 지불 금액 = 월 금액 × 개월 수
-        BigDecimal totalPaid = subscription.getMonthlyAmount().multiply(BigDecimal.valueOf(monthsPaid));
+        // 총 지불 금액 = 구독 총 금액 (선불 기준)
+        BigDecimal totalPaid = subscription.getTotalAmount();
 
         // 회당 비용 = 총 지불 금액 / 총 사용 횟수
         return totalPaid.divide(BigDecimal.valueOf(totalUsageCount), 0, RoundingMode.HALF_UP);

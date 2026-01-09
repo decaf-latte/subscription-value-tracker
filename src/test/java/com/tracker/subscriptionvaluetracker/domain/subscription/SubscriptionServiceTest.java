@@ -327,10 +327,10 @@ class SubscriptionServiceTest {
         }
 
         @Test
-        @DisplayName("총 사용 횟수로 나눈 회당 비용을 계산한다 (이번달 시작 구독)")
+        @DisplayName("총 금액을 사용 횟수로 나눈 회당 비용을 계산한다")
         void calculateDailyCost_WithUsage() {
             // given
-            // 이번 달에 시작한 구독, 월 30000원, 총 10회 사용
+            // 1개월 구독, 총 금액 30000원, 총 10회 사용
             Subscription subscription = createTestSubscription("헬스장", "30000");
             setSubscriptionId(subscription, 1L);
 
@@ -340,19 +340,19 @@ class SubscriptionServiceTest {
             BigDecimal result = subscriptionService.calculateDailyCost(subscription);
 
             // then
-            // 1개월 × 30000원 / 10회 = 3000원
+            // 총 금액 30000원 / 10회 = 3000원
             assertThat(result).isEqualTo(new BigDecimal("3000"));
         }
 
         @Test
-        @DisplayName("여러 달에 걸친 사용량으로 회당 비용을 계산한다")
+        @DisplayName("총 금액을 기준으로 회당 비용을 계산한다 (3개월 구독)")
         void calculateDailyCost_MultipleMonths() {
             // given
-            // 3개월 전에 시작한 구독 (startDate를 3개월 전으로 설정)
+            // 3개월 구독 (총 90000원, 월 30000원)
             Subscription subscription = new Subscription(
-                    TEST_USER_UUID, "헬스장", "gym", "1개월",
-                    new BigDecimal("30000"), new BigDecimal("30000"),
-                    LocalDate.now().minusMonths(2) // 3개월 전 시작 (현재 포함해서 3개월)
+                    TEST_USER_UUID, "헬스장", "gym", "3개월",
+                    new BigDecimal("90000"), new BigDecimal("30000"),
+                    LocalDate.now().minusMonths(2)
             );
             setSubscriptionId(subscription, 1L);
 
@@ -363,7 +363,7 @@ class SubscriptionServiceTest {
             BigDecimal result = subscriptionService.calculateDailyCost(subscription);
 
             // then
-            // 3개월 × 30000원 = 90000원 / 15회 = 6000원
+            // 총 금액 90000원 / 15회 = 6000원
             assertThat(result).isEqualTo(new BigDecimal("6000"));
         }
 

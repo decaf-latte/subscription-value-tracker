@@ -56,8 +56,10 @@ src/main/resources/
 ### Subscription (구독)
 - Monthly subscription services (gym, Netflix, etc.)
 - Tracks usage/attendance via `UsageLog`
-- **Daily Cost Calculation**: `monthlyAmount ÷ usageCountThisMonth`
-- All usage dates show the same calculated daily cost (updates when new usage added)
+- **Cost Per Use Calculation**: `(monthlyAmount × monthsSinceStart) ÷ totalUsageCount`
+  - 구독 시작월부터 현재월까지의 총 지불액을 총 사용 횟수로 나눔
+  - 예: 월 10,000원, 1월 4회 + 2월 1회 = 총 5회 → (10,000 × 2) / 5 = 4,000원/회
+- All usage dates (across all months) show the same calculated cost (updates when new usage added)
 
 ### Investment (투자)
 - One-time purchases with ongoing savings tracking (e-reader, annual pass)

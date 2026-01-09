@@ -150,18 +150,26 @@ flowchart TD
     style G fill:#3b82f6
 ```
 
-### 3.3 일일비용 계산 로직
+### 3.3 회당 비용 계산 로직
 
 ```mermaid
 flowchart LR
-    A[월 구독료] --> B[÷]
-    C[이번 달 출석 횟수] --> B
-    B --> D[일일비용]
-    D --> E{비용 수준 판단}
-    E -->|≤ 월금액/20| F[🟢 Good]
-    E -->|≤ 월금액/10| G[🟡 Normal]
-    E -->|> 월금액/10| H[🔴 Warning]
+    A[월 구독료] --> B[×]
+    C[구독 시작후 개월수] --> B
+    B --> D[총 지불액]
+    D --> E[÷]
+    F[전체 기간 총 사용횟수] --> E
+    E --> G[회당 비용]
+    G --> H{비용 수준 판단}
+    H -->|≤ 월금액/20| I[🟢 Good]
+    H -->|≤ 월금액/10| J[🟡 Normal]
+    H -->|> 월금액/10| K[🔴 Warning]
 ```
+
+**예시:** 월 10,000원 구독, 1월 4회 + 2월 1회 사용
+- 총 지불액: 10,000 × 2개월 = 20,000원
+- 총 사용횟수: 5회
+- 회당 비용: 20,000 ÷ 5 = 4,000원 (1월, 2월 모든 날짜에 동일하게 표시)
 
 ---
 
@@ -276,17 +284,32 @@ sequenceDiagram
 
 ## 5. 핵심 비즈니스 로직
 
-### 5.1 일일비용 계산
+### 5.1 회당 비용 계산
 
 ```java
 // SubscriptionService.java
 public BigDecimal calculateDailyCost(Subscription subscription) {
-    int usageCount = getMonthlyUsageCount(subscription.getId());
-    if (usageCount == 0) {
+    int totalUsageCount = getTotalUsageCount(subscription.getId());
+    if (totalUsageCount == 0) {
         return subscription.getMonthlyAmount(); // 사용 안하면 월 전체 금액
     }
-    return subscription.getMonthlyAmount()
-            .divide(BigDecimal.valueOf(usageCount), 0, RoundingMode.HALF_UP);
+
+    // 구독 시작월부터 현재월까지 몇 개월인지 계산
+    YearMonth startMonth = YearMonth.from(subscription.getStartDate());
+    YearMonth currentMonth = YearMonth.now();
+    long monthsPaid = startMonth.until(currentMonth, ChronoUnit.MONTHS) + 1;
+
+    // 총 지불 금액 = 월 금액 × 개월 수
+    BigDecimal totalPaid = subscription.getMonthlyAmount()
+            .multiply(BigDecimal.valueOf(monthsPaid));
+
+    // 회당 비용 = 총 지불 금액 / 총 사용 횟수
+    return totalPaid.divide(BigDecimal.valueOf(totalUsageCount), 0, RoundingMode.HALF_UP);
+}
+
+// 총 사용 횟수 조회 (전체 기간)
+public int getTotalUsageCount(Long subscriptionId) {
+    return (int) usageLogRepository.countBySubscriptionId(subscriptionId);
 }
 ```
 

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/default :: layout(~{::title/text()}, ~{::section})}">
+<head>
+    <title th:text="${investment.name} + ' - 상세'">투자 상세</title>
+</head>
+<body>
+<section>
+    <div class="max-w-4xl mx-auto">
+        <!-- 헤더 -->
+        <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center gap-4">
+                <a th:href="@{/investments}" class="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                </a>
+                <div class="flex items-center gap-3">
+                    <span class="text-4xl" th:text="${investment.emoji}">📦</span>
+                    <div>
+                        <h2 class="text-2xl font-bold" th:text="${investment.name}">항목명</h2>
+                        <p class="text-gray-400" th:text="${investment.category == 'E_READER'} ? '이북 리더기' : (${investment.category == 'ANNUAL_PASS'} ? '연간 이용권' : (${investment.category == 'EQUIPMENT'} ? '장비' : '기타'))">카테고리</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <a th:href="@{/investments/{id}/edit(id=${investment.id})}"
+                   class="px-4 py-2 bg-white/10 text-white rounded-xl font-medium hover:bg-white/20 transition">
+                    수정
+                </a>
+                <form th:action="@{/investments/{id}/delete(id=${investment.id})}" method="post"
+                      onsubmit="return confirm('정말 삭제하시겠습니까?');">
+                    <button type="submit"
+                            class="px-4 py-2 bg-red-500/20 text-red-400 rounded-xl font-medium hover:bg-red-500/30 transition">
+                        삭제
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 손익분기점 배지 -->
+        <div th:if="${investment.breakEvenReached}"
+             class="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl text-center">
+            <p class="text-2xl mb-2">🎉</p>
+            <p class="text-emerald-400 font-bold text-lg">손익분기점 달성!</p>
+            <p class="text-emerald-300 text-sm" th:text="'현재 순이익: ₩' + ${#numbers.formatInteger(investment.netProfit, 0, 'COMMA')}"></p>
+        </div>
+
+        <!-- 통계 카드 -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-dark-card rounded-2xl p-4 border border-dark-border">
+                <p class="text-sm text-gray-400 mb-1">구매가</p>
+                <p class="text-xl font-bold" th:text="'₩' + ${#numbers.formatInteger(investment.purchasePrice, 0, 'COMMA')}">₩0</p>
+            </div>
+            <div class="bg-dark-card rounded-2xl p-4 border border-dark-border">
+                <p class="text-sm text-gray-400 mb-1">총 절약액</p>
+                <p class="text-xl font-bold text-emerald-400" th:text="'₩' + ${#numbers.formatInteger(investment.totalSavings, 0, 'COMMA')}">₩0</p>
+            </div>
+            <div class="bg-dark-card rounded-2xl p-4 border border-dark-border">
+                <p class="text-sm text-gray-400 mb-1">사용 횟수</p>
+                <p class="text-xl font-bold">
+                    <span th:text="${investment.usageCount}">0</span>
+                    <span class="text-sm text-gray-500">회</span>
+                </p>
+            </div>
+            <div class="bg-dark-card rounded-2xl p-4 border border-dark-border">
+                <p class="text-sm text-gray-400 mb-1">회당 절약</p>
+                <p class="text-xl font-bold text-blue-400" th:text="'₩' + ${#numbers.formatInteger(investment.avgSavingsPerUse, 0, 'COMMA')}">₩0</p>
+            </div>
+        </div>
+
+        <!-- 손익분기점 프로그레스 -->
+        <div class="bg-dark-card rounded-2xl p-5 border border-dark-border mb-6">
+            <div class="flex justify-between items-center mb-3">
+                <h3 class="font-semibold">손익분기점 진행률</h3>
+                <span class="text-lg font-bold" th:classappend="${investment.breakEvenReached} ? 'text-emerald-400' : 'text-blue-400'"
+                      th:text="${investment.breakEvenProgress} + '%'">0%</span>
+            </div>
+            <div class="h-4 bg-white/10 rounded-full overflow-hidden mb-3">
+                <div class="h-full rounded-full transition-all duration-500"
+                     th:classappend="${investment.breakEvenReached} ? 'bg-emerald-500' : 'bg-blue-500'"
+                     th:style="'width: ' + ${investment.breakEvenProgress} + '%'"></div>
+            </div>
+            <div class="flex justify-between text-sm text-gray-400">
+                <span>₩0</span>
+                <span th:unless="${investment.breakEvenReached}"
+                      th:text="'₩' + ${#numbers.formatInteger(investment.breakEvenRemaining, 0, 'COMMA')} + ' 남음'">₩0 남음</span>
+                <span th:text="'₩' + ${#numbers.formatInteger(investment.purchasePrice, 0, 'COMMA')}">₩0</span>
+            </div>
+        </div>
+
+        <!-- 사용 기록 추가 폼 -->
+        <div class="bg-dark-card rounded-2xl p-5 border border-dark-border mb-6">
+            <h3 class="font-semibold mb-4">사용 기록 추가</h3>
+            <form th:action="@{/investments/{id}/usage(id=${investment.id})}"
+                  method="post"
+                  th:object="${usageForm}"
+                  class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="itemName" class="block text-sm text-gray-400 mb-1">항목명</label>
+                        <input type="text" id="itemName" th:field="*{itemName}"
+                               placeholder="책 제목, 콘텐츠명 등"
+                               required
+                               class="w-full px-4 py-2 bg-white/5 border border-dark-border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition">
+                    </div>
+                    <div>
+                        <label for="usedAt" class="block text-sm text-gray-400 mb-1">사용일</label>
+                        <input type="date" id="usedAt" th:field="*{usedAt}"
+                               required
+                               class="w-full px-4 py-2 bg-white/5 border border-dark-border rounded-xl text-white focus:outline-none focus:border-blue-500 transition">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label for="originalPrice" class="block text-sm text-gray-400 mb-1">원래 가격</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">₩</span>
+                            <input type="number" id="originalPrice" th:field="*{originalPrice}"
+                                   placeholder="15000"
+                                   required min="0"
+                                   class="w-full pl-8 pr-4 py-2 bg-white/5 border border-dark-border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition">
+                        </div>
+                    </div>
+                    <div>
+                        <label for="actualPrice" class="block text-sm text-gray-400 mb-1">실제 지불 가격</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">₩</span>
+                            <input type="number" id="actualPrice" th:field="*{actualPrice}"
+                                   placeholder="0"
+                                   required min="0"
+                                   class="w-full pl-8 pr-4 py-2 bg-white/5 border border-dark-border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition">
+                        </div>
+                        <p class="mt-1 text-xs text-gray-500">구독/무료면 0 입력</p>
+                    </div>
+                    <div>
+                        <label for="source" class="block text-sm text-gray-400 mb-1">출처 (선택)</label>
+                        <input type="text" id="source" th:field="*{source}"
+                               placeholder="리디셀렉트, 밀리 등"
+                               class="w-full px-4 py-2 bg-white/5 border border-dark-border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition">
+                    </div>
+                </div>
+                <button type="submit"
+                        class="w-full py-3 bg-blue-500 text-white rounded-xl font-medium hover:bg-blue-600 transition">
+                    + 사용 기록 추가
+                </button>
+            </form>
+        </div>
+
+        <!-- 사용 기록 목록 -->
+        <div class="bg-dark-card rounded-2xl p-5 border border-dark-border">
+            <h3 class="font-semibold mb-4">사용 기록</h3>
+
+            <div th:if="${#lists.isEmpty(usages)}" class="text-center py-8 text-gray-400">
+                <p class="text-4xl mb-2">📝</p>
+                <p>아직 사용 기록이 없습니다</p>
+            </div>
+
+            <div th:unless="${#lists.isEmpty(usages)}" class="space-y-3">
+                <div th:each="usage : ${usages}"
+                     class="flex items-center justify-between p-4 bg-white/5 rounded-xl">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="font-medium" th:text="${usage.itemName}">항목명</span>
+                            <span th:if="${usage.source}"
+                                  class="px-2 py-0.5 bg-white/10 rounded text-xs text-gray-400"
+                                  th:text="${usage.source}">출처</span>
+                        </div>
+                        <p class="text-sm text-gray-400" th:text="${#temporals.format(usage.usedAt, 'yyyy-MM-dd')}">날짜</p>
+                    </div>
+                    <div class="text-right mr-4">
+                        <p class="text-emerald-400 font-bold" th:text="'+₩' + ${#numbers.formatInteger(usage.savedAmount, 0, 'COMMA')}">+₩0</p>
+                        <p class="text-xs text-gray-500">
+                            <span th:text="'₩' + ${#numbers.formatInteger(usage.originalPrice, 0, 'COMMA')}">₩0</span>
+                            →
+                            <span th:text="'₩' + ${#numbers.formatInteger(usage.actualPrice, 0, 'COMMA')}">₩0</span>
+                        </p>
+                    </div>
+                    <form th:action="@{/investments/{id}/usage/{usageId}/delete(id=${investment.id}, usageId=${usage.id})}"
+                          method="post"
+                          onsubmit="return confirm('이 기록을 삭제하시겠습니까?');">
+                        <button type="submit"
+                                class="p-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                            </svg>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+</body>
+</html>

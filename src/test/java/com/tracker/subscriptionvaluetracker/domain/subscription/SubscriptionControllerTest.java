@@ -159,8 +159,8 @@ class SubscriptionControllerTest {
     class UpdateSubscription {
 
         @Test
-        @DisplayName("구독을 수정하고 캘린더로 리다이렉트한다")
-        void update_RedirectsToCalendar() {
+        @DisplayName("구독을 수정하고 상세 페이지로 리다이렉트한다")
+        void update_RedirectsToDetail() {
             // given
             SubscriptionForm form = new SubscriptionForm();
             form.setName("넷플릭스 프리미엄");
@@ -172,7 +172,7 @@ class SubscriptionControllerTest {
             String result = controller.update(1L, form, request, response, redirectAttributes);
 
             // then
-            assertThat(result).isEqualTo("redirect:/calendar");
+            assertThat(result).isEqualTo("redirect:/subscriptions/1");
             verify(subscriptionService).updateSubscription(eq(1L), eq(TEST_USER_UUID), any(SubscriptionForm.class));
         }
     }
@@ -182,13 +182,13 @@ class SubscriptionControllerTest {
     class DeleteSubscription {
 
         @Test
-        @DisplayName("구독을 삭제하고 캘린더로 리다이렉트한다")
-        void delete_RedirectsToCalendar() {
+        @DisplayName("구독을 삭제하고 대시보드로 리다이렉트한다")
+        void delete_RedirectsToDashboard() {
             // when
             String result = controller.delete(1L, request, response, redirectAttributes);
 
             // then
-            assertThat(result).isEqualTo("redirect:/calendar");
+            assertThat(result).isEqualTo("redirect:/");
             verify(subscriptionService).deleteSubscription(1L, TEST_USER_UUID);
         }
     }

@@ -26,4 +26,6 @@ public interface UsageLogRepository extends JpaRepository<UsageLog, Long> {
     boolean existsBySubscriptionIdAndUsedAt(Long subscriptionId, LocalDate usedAt);
 
     long countBySubscriptionId(Long subscriptionId);
+
+    List<UsageLog> findTop10BySubscriptionIdOrderByUsedAtDesc(Long subscriptionId);
 }

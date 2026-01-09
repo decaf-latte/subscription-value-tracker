@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/default :: layout(~{::title/text()}, ~{::section})}">
+<head>
+    <title th:text="${subscription.name} + ' - 상세'">구독 상세</title>
+</head>
+<body>
+<section>
+    <div class="max-w-4xl mx-auto">
+        <!-- 헤더 -->
+        <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center gap-4">
+                <a th:href="@{/}" class="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                </a>
+                <div class="flex items-center gap-3">
+                    <span class="text-4xl" th:text="${subscription.emoji}">📌</span>
+                    <div>
+                        <h2 class="text-2xl font-bold" th:text="${subscription.name}">구독명</h2>
+                        <p class="text-gray-400" th:text="${subscription.periodType}">기간</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <a th:href="@{/subscriptions/{id}/edit(id=${subscription.id})}"
+                   class="px-4 py-2 bg-white/10 text-white rounded-xl font-medium hover:bg-white/20 transition">
+                    수정
+                </a>
+                <form th:action="@{/subscriptions/{id}/delete(id=${subscription.id})}" method="post"
+                      onsubmit="return confirm('정말 삭제하시겠습니까?');">
+                    <button type="submit"
+                            class="px-4 py-2 bg-red-500/20 text-red-400 rounded-xl font-medium hover:bg-red-500/30 transition">
+                        삭제
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 통계 카드 -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-dark-card rounded-2xl p-4 border border-dark-border">
+                <p class="text-sm text-gray-400 mb-1">총 금액</p>
+                <p class="text-xl font-bold" th:text="'₩' + ${#numbers.formatInteger(subscription.totalAmount, 0, 'COMMA')}">₩0</p>
+            </div>
+            <div class="bg-dark-card rounded-2xl p-4 border border-dark-border">
+                <p class="text-sm text-gray-400 mb-1">월 환산</p>
+                <p class="text-xl font-bold" th:text="'₩' + ${#numbers.formatInteger(subscription.monthlyAmount, 0, 'COMMA')}">₩0</p>
+            </div>
+            <div class="bg-dark-card rounded-2xl p-4 border border-dark-border">
+                <p class="text-sm text-gray-400 mb-1">총 사용</p>
+                <p class="text-xl font-bold">
+                    <span th:text="${subscription.usageCount}">0</span>
+                    <span class="text-sm text-gray-500">회</span>
+                </p>
+            </div>
+            <div class="bg-dark-card rounded-2xl p-4 border border-dark-border">
+                <p class="text-sm text-gray-400 mb-1">회당 비용</p>
+                <p class="text-xl font-bold"
+                   th:classappend="${subscription.dailyCostLevel == 'good'} ? 'text-emerald-400' : (${subscription.dailyCostLevel == 'warning'} ? 'text-red-400' : 'text-yellow-400')"
+                   th:text="'₩' + ${#numbers.formatInteger(subscription.dailyCost, 0, 'COMMA')}">₩0</p>
+            </div>
+        </div>
+
+        <!-- 구독 정보 -->
+        <div class="bg-dark-card rounded-2xl p-5 border border-dark-border mb-6">
+            <h3 class="font-semibold mb-4">구독 정보</h3>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <p class="text-sm text-gray-400 mb-1">시작일</p>
+                    <p class="font-medium" th:text="${#temporals.format(subscription.startDate, 'yyyy-MM-dd')}">날짜</p>
+                </div>
+                <div th:if="${subscription.endDate}">
+                    <p class="text-sm text-gray-400 mb-1">종료일</p>
+                    <p class="font-medium" th:text="${#temporals.format(subscription.endDate, 'yyyy-MM-dd')}">날짜</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 출석 체크 버튼 -->
+        <div class="bg-dark-card rounded-2xl p-5 border border-dark-border mb-6">
+            <h3 class="font-semibold mb-4">출석 체크</h3>
+            <form th:action="@{/subscriptions/{id}/check-in(id=${subscription.id})}" method="post">
+                <input type="hidden" name="returnUrl" th:value="@{/subscriptions/{id}(id=${subscription.id})}">
+                <button type="submit"
+                        th:classappend="${subscription.checkedInToday} ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-emerald-500 text-white'"
+                        class="w-full py-3 rounded-xl font-medium transition border border-transparent">
+                    <span th:if="${subscription.checkedInToday}">✓ 오늘 출석 완료 (클릭하면 취소)</span>
+                    <span th:unless="${subscription.checkedInToday}">+ 오늘 출석 체크</span>
+                </button>
+            </form>
+        </div>
+
+        <!-- 최근 출석 기록 -->
+        <div class="bg-dark-card rounded-2xl p-5 border border-dark-border">
+            <h3 class="font-semibold mb-4">최근 사용 기록</h3>
+
+            <div th:if="${#lists.isEmpty(usageLogs)}" class="text-center py-8 text-gray-400">
+                <p class="text-4xl mb-2">📝</p>
+                <p>아직 사용 기록이 없습니다</p>
+            </div>
+
+            <div th:unless="${#lists.isEmpty(usageLogs)}" class="space-y-2">
+                <div th:each="log : ${usageLogs}"
+                     class="flex items-center justify-between p-3 bg-white/5 rounded-xl">
+                    <div class="flex items-center gap-3">
+                        <span class="text-emerald-400">✓</span>
+                        <span th:text="${#temporals.format(log.usedAt, 'yyyy-MM-dd (E)')}">날짜</span>
+                    </div>
+                    <span th:if="${log.note}" class="text-sm text-gray-400" th:text="${log.note}">메모</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+</body>
+</html>

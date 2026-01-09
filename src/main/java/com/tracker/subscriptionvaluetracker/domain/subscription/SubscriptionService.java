@@ -129,12 +129,34 @@ public class SubscriptionService {
         return (int) usageLogRepository.countBySubscriptionIdAndUsedAtBetween(subscriptionId, startOfMonth, endOfMonth);
     }
 
+    /**
+     * 구독의 총 사용 횟수 (구독 시작일부터 현재까지)
+     */
+    public int getTotalUsageCount(Long subscriptionId) {
+        return (int) usageLogRepository.countBySubscriptionId(subscriptionId);
+    }
+
+    /**
+     * 회당 비용 계산: 총 지불 금액 / 총 사용 횟수
+     * - 구독 시작월부터 현재월까지의 개월 수 × 월 금액 = 총 지불 금액
+     * - 총 지불 금액 / 총 사용 횟수 = 회당 비용
+     */
     public BigDecimal calculateDailyCost(Subscription subscription) {
-        int usageCount = getMonthlyUsageCount(subscription.getId());
-        if (usageCount == 0) {
+        int totalUsageCount = getTotalUsageCount(subscription.getId());
+        if (totalUsageCount == 0) {
             return subscription.getMonthlyAmount();
         }
-        return subscription.getMonthlyAmount().divide(BigDecimal.valueOf(usageCount), 0, RoundingMode.HALF_UP);
+
+        // 구독 시작월부터 현재월까지 몇 개월인지 계산
+        YearMonth startMonth = YearMonth.from(subscription.getStartDate());
+        YearMonth currentMonth = YearMonth.now();
+        long monthsPaid = startMonth.until(currentMonth, java.time.temporal.ChronoUnit.MONTHS) + 1;
+
+        // 총 지불 금액
+        BigDecimal totalPaid = subscription.getMonthlyAmount().multiply(BigDecimal.valueOf(monthsPaid));
+
+        // 회당 비용 = 총 지불 금액 / 총 사용 횟수
+        return totalPaid.divide(BigDecimal.valueOf(totalUsageCount), 0, RoundingMode.HALF_UP);
     }
 
     public String getDailyCostLevel(BigDecimal dailyCost, BigDecimal monthlyAmount) {
@@ -160,7 +182,7 @@ public class SubscriptionService {
     }
 
     public SubscriptionViewDto toViewDto(Subscription subscription) {
-        int usageCount = getMonthlyUsageCount(subscription.getId());
+        int usageCount = getTotalUsageCount(subscription.getId());
         BigDecimal dailyCost = calculateDailyCost(subscription);
         String dailyCostLevel = getDailyCostLevel(dailyCost, subscription.getMonthlyAmount());
         boolean checkedInToday = isCheckedInToday(subscription.getId());

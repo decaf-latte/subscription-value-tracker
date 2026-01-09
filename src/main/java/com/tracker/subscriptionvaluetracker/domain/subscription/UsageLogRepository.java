@@ -24,4 +24,6 @@ public interface UsageLogRepository extends JpaRepository<UsageLog, Long> {
             @Param("endDate") LocalDate endDate);
 
     boolean existsBySubscriptionIdAndUsedAt(Long subscriptionId, LocalDate usedAt);
+
+    long countBySubscriptionId(Long subscriptionId);
 }

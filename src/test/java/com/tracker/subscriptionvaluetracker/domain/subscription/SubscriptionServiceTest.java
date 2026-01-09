@@ -307,20 +307,17 @@ class SubscriptionServiceTest {
     }
 
     @Nested
-    @DisplayName("일일 비용 계산")
+    @DisplayName("회당 비용 계산")
     class DailyCostCalculation {
 
         @Test
-        @DisplayName("사용 횟수가 0이면 월 금액 전체가 일일 비용이다")
+        @DisplayName("사용 횟수가 0이면 월 금액 전체가 회당 비용이다")
         void calculateDailyCost_ZeroUsage() {
             // given
             Subscription subscription = createTestSubscription("넷플릭스", "17000");
             setSubscriptionId(subscription, 1L);
 
-            YearMonth currentMonth = YearMonth.now();
-            given(usageLogRepository.countBySubscriptionIdAndUsedAtBetween(
-                    eq(1L), eq(currentMonth.atDay(1)), eq(currentMonth.atEndOfMonth())))
-                    .willReturn(0L);
+            given(usageLogRepository.countBySubscriptionId(1L)).willReturn(0L);
 
             // when
             BigDecimal result = subscriptionService.calculateDailyCost(subscription);
@@ -330,22 +327,44 @@ class SubscriptionServiceTest {
         }
 
         @Test
-        @DisplayName("사용 횟수로 나눈 일일 비용을 계산한다")
+        @DisplayName("총 사용 횟수로 나눈 회당 비용을 계산한다 (이번달 시작 구독)")
         void calculateDailyCost_WithUsage() {
             // given
+            // 이번 달에 시작한 구독, 월 30000원, 총 10회 사용
             Subscription subscription = createTestSubscription("헬스장", "30000");
             setSubscriptionId(subscription, 1L);
 
-            YearMonth currentMonth = YearMonth.now();
-            given(usageLogRepository.countBySubscriptionIdAndUsedAtBetween(
-                    eq(1L), eq(currentMonth.atDay(1)), eq(currentMonth.atEndOfMonth())))
-                    .willReturn(10L);
+            given(usageLogRepository.countBySubscriptionId(1L)).willReturn(10L);
 
             // when
             BigDecimal result = subscriptionService.calculateDailyCost(subscription);
 
             // then
-            assertThat(result).isEqualTo(new BigDecimal("3000")); // 30000 / 10
+            // 1개월 × 30000원 / 10회 = 3000원
+            assertThat(result).isEqualTo(new BigDecimal("3000"));
+        }
+
+        @Test
+        @DisplayName("여러 달에 걸친 사용량으로 회당 비용을 계산한다")
+        void calculateDailyCost_MultipleMonths() {
+            // given
+            // 3개월 전에 시작한 구독 (startDate를 3개월 전으로 설정)
+            Subscription subscription = new Subscription(
+                    TEST_USER_UUID, "헬스장", "gym", "1개월",
+                    new BigDecimal("30000"), new BigDecimal("30000"),
+                    LocalDate.now().minusMonths(2) // 3개월 전 시작 (현재 포함해서 3개월)
+            );
+            setSubscriptionId(subscription, 1L);
+
+            // 총 15회 사용
+            given(usageLogRepository.countBySubscriptionId(1L)).willReturn(15L);
+
+            // when
+            BigDecimal result = subscriptionService.calculateDailyCost(subscription);
+
+            // then
+            // 3개월 × 30000원 = 90000원 / 15회 = 6000원
+            assertThat(result).isEqualTo(new BigDecimal("6000"));
         }
 
         @Test

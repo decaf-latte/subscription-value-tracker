@@ -8,30 +8,30 @@
 <section>
     <div class="max-w-4xl mx-auto">
         <!-- 헤더 -->
-        <div class="flex items-center justify-between mb-6">
-            <div class="flex items-center gap-4">
-                <a th:href="@{/}" class="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div class="flex items-center gap-3 md:gap-4">
+                <a th:href="@{/}" class="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition">
+                    <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                     </svg>
                 </a>
-                <div class="flex items-center gap-3">
-                    <span class="text-4xl" th:text="${subscription.emoji}">📌</span>
+                <div class="flex items-center gap-2 md:gap-3">
+                    <span class="text-3xl md:text-4xl" th:text="${subscription.emoji}">📌</span>
                     <div>
-                        <h2 class="text-2xl font-bold" th:text="${subscription.name}">구독명</h2>
-                        <p class="text-gray-400" th:text="${subscription.periodType}">기간</p>
+                        <h2 class="text-xl md:text-2xl font-bold" th:text="${subscription.name}">구독명</h2>
+                        <p class="text-gray-500 dark:text-gray-400 text-sm" th:text="${subscription.periodType}">기간</p>
                     </div>
                 </div>
             </div>
-            <div class="flex gap-2">
+            <div class="flex gap-2 ml-auto sm:ml-0">
                 <a th:href="@{/subscriptions/{id}/edit(id=${subscription.id})}"
-                   class="px-4 py-2 bg-white/10 text-white rounded-xl font-medium hover:bg-white/20 transition">
+                   class="px-3 md:px-4 py-2 bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-white rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-white/20 transition text-sm">
                     수정
                 </a>
                 <form th:action="@{/subscriptions/{id}/delete(id=${subscription.id})}" method="post"
                       onsubmit="return confirm('정말 삭제하시겠습니까?');">
                     <button type="submit"
-                            class="px-4 py-2 bg-red-500/20 text-red-400 rounded-xl font-medium hover:bg-red-500/30 transition">
+                            class="px-3 md:px-4 py-2 bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400 rounded-xl font-medium hover:bg-red-200 dark:hover:bg-red-500/30 transition text-sm">
                         삭제
                     </button>
                 </form>
@@ -39,53 +39,53 @@
         </div>
 
         <!-- 통계 카드 -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div class="bg-dark-card rounded-2xl p-4 border border-dark-border">
-                <p class="text-sm text-gray-400 mb-1">총 금액</p>
-                <p class="text-xl font-bold" th:text="'₩' + ${#numbers.formatInteger(subscription.totalAmount, 0, 'COMMA')}">₩0</p>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
+            <div class="bg-light-card dark:bg-dark-card rounded-2xl p-3 md:p-4 border border-light-border dark:border-dark-border">
+                <p class="text-xs md:text-sm text-gray-500 dark:text-gray-400 mb-1">총 금액</p>
+                <p class="text-lg md:text-xl font-bold" th:text="'₩' + ${#numbers.formatInteger(subscription.totalAmount, 0, 'COMMA')}">₩0</p>
             </div>
-            <div class="bg-dark-card rounded-2xl p-4 border border-dark-border">
-                <p class="text-sm text-gray-400 mb-1">월 환산</p>
-                <p class="text-xl font-bold" th:text="'₩' + ${#numbers.formatInteger(subscription.monthlyAmount, 0, 'COMMA')}">₩0</p>
+            <div class="bg-light-card dark:bg-dark-card rounded-2xl p-3 md:p-4 border border-light-border dark:border-dark-border">
+                <p class="text-xs md:text-sm text-gray-500 dark:text-gray-400 mb-1">월 환산</p>
+                <p class="text-lg md:text-xl font-bold" th:text="'₩' + ${#numbers.formatInteger(subscription.monthlyAmount, 0, 'COMMA')}">₩0</p>
             </div>
-            <div class="bg-dark-card rounded-2xl p-4 border border-dark-border">
-                <p class="text-sm text-gray-400 mb-1">총 사용</p>
-                <p class="text-xl font-bold">
+            <div class="bg-light-card dark:bg-dark-card rounded-2xl p-3 md:p-4 border border-light-border dark:border-dark-border">
+                <p class="text-xs md:text-sm text-gray-500 dark:text-gray-400 mb-1">총 사용</p>
+                <p class="text-lg md:text-xl font-bold">
                     <span th:text="${subscription.usageCount}">0</span>
                     <span class="text-sm text-gray-500">회</span>
                 </p>
             </div>
-            <div class="bg-dark-card rounded-2xl p-4 border border-dark-border">
-                <p class="text-sm text-gray-400 mb-1">회당 비용</p>
-                <p class="text-xl font-bold"
-                   th:classappend="${subscription.dailyCostLevel == 'good'} ? 'text-emerald-400' : (${subscription.dailyCostLevel == 'warning'} ? 'text-red-400' : 'text-yellow-400')"
+            <div class="bg-light-card dark:bg-dark-card rounded-2xl p-3 md:p-4 border border-light-border dark:border-dark-border">
+                <p class="text-xs md:text-sm text-gray-500 dark:text-gray-400 mb-1">회당 비용</p>
+                <p class="text-lg md:text-xl font-bold"
+                   th:classappend="${subscription.dailyCostLevel == 'good'} ? 'text-emerald-500 dark:text-emerald-400' : (${subscription.dailyCostLevel == 'warning'} ? 'text-red-500 dark:text-red-400' : 'text-yellow-500 dark:text-yellow-400')"
                    th:text="'₩' + ${#numbers.formatInteger(subscription.dailyCost, 0, 'COMMA')}">₩0</p>
             </div>
         </div>
 
         <!-- 구독 정보 -->
-        <div class="bg-dark-card rounded-2xl p-5 border border-dark-border mb-6">
-            <h3 class="font-semibold mb-4">구독 정보</h3>
+        <div class="bg-light-card dark:bg-dark-card rounded-2xl p-4 md:p-5 border border-light-border dark:border-dark-border mb-4 md:mb-6">
+            <h3 class="font-semibold mb-3 md:mb-4 text-sm md:text-base">구독 정보</h3>
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <p class="text-sm text-gray-400 mb-1">시작일</p>
-                    <p class="font-medium" th:text="${#temporals.format(subscription.startDate, 'yyyy-MM-dd')}">날짜</p>
+                    <p class="text-xs md:text-sm text-gray-500 dark:text-gray-400 mb-1">시작일</p>
+                    <p class="font-medium text-sm md:text-base" th:text="${#temporals.format(subscription.startDate, 'yyyy-MM-dd')}">날짜</p>
                 </div>
                 <div th:if="${subscription.endDate}">
-                    <p class="text-sm text-gray-400 mb-1">종료일</p>
-                    <p class="font-medium" th:text="${#temporals.format(subscription.endDate, 'yyyy-MM-dd')}">날짜</p>
+                    <p class="text-xs md:text-sm text-gray-500 dark:text-gray-400 mb-1">종료일</p>
+                    <p class="font-medium text-sm md:text-base" th:text="${#temporals.format(subscription.endDate, 'yyyy-MM-dd')}">날짜</p>
                 </div>
             </div>
         </div>
 
         <!-- 출석 체크 버튼 -->
-        <div class="bg-dark-card rounded-2xl p-5 border border-dark-border mb-6">
-            <h3 class="font-semibold mb-4">출석 체크</h3>
+        <div class="bg-light-card dark:bg-dark-card rounded-2xl p-4 md:p-5 border border-light-border dark:border-dark-border mb-4 md:mb-6">
+            <h3 class="font-semibold mb-3 md:mb-4 text-sm md:text-base">출석 체크</h3>
             <form th:action="@{/subscriptions/{id}/check-in(id=${subscription.id})}" method="post">
                 <input type="hidden" name="returnUrl" th:value="@{/subscriptions/{id}(id=${subscription.id})}">
                 <button type="submit"
-                        th:classappend="${subscription.checkedInToday} ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-emerald-500 text-white'"
-                        class="w-full py-3 rounded-xl font-medium transition border border-transparent">
+                        th:classappend="${subscription.checkedInToday} ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/30' : 'bg-emerald-500 text-white'"
+                        class="w-full py-3 rounded-xl font-medium transition border border-transparent text-sm md:text-base">
                     <span th:if="${subscription.checkedInToday}">✓ 오늘 출석 완료 (클릭하면 취소)</span>
                     <span th:unless="${subscription.checkedInToday}">+ 오늘 출석 체크</span>
                 </button>
@@ -93,22 +93,22 @@
         </div>
 
         <!-- 최근 출석 기록 -->
-        <div class="bg-dark-card rounded-2xl p-5 border border-dark-border">
-            <h3 class="font-semibold mb-4">최근 사용 기록</h3>
+        <div class="bg-light-card dark:bg-dark-card rounded-2xl p-4 md:p-5 border border-light-border dark:border-dark-border">
+            <h3 class="font-semibold mb-3 md:mb-4 text-sm md:text-base">최근 사용 기록</h3>
 
-            <div th:if="${#lists.isEmpty(usageLogs)}" class="text-center py-8 text-gray-400">
-                <p class="text-4xl mb-2">📝</p>
-                <p>아직 사용 기록이 없습니다</p>
+            <div th:if="${#lists.isEmpty(usageLogs)}" class="text-center py-6 md:py-8 text-gray-500 dark:text-gray-400">
+                <p class="text-3xl md:text-4xl mb-2">📝</p>
+                <p class="text-sm md:text-base">아직 사용 기록이 없습니다</p>
             </div>
 
             <div th:unless="${#lists.isEmpty(usageLogs)}" class="space-y-2">
                 <div th:each="log : ${usageLogs}"
-                     class="flex items-center justify-between p-3 bg-white/5 rounded-xl">
-                    <div class="flex items-center gap-3">
-                        <span class="text-emerald-400">✓</span>
-                        <span th:text="${#temporals.format(log.usedAt, 'yyyy-MM-dd (E)')}">날짜</span>
+                     class="flex items-center justify-between p-3 bg-gray-50 dark:bg-white/5 rounded-xl">
+                    <div class="flex items-center gap-2 md:gap-3">
+                        <span class="text-emerald-500 dark:text-emerald-400">✓</span>
+                        <span class="text-sm md:text-base" th:text="${#temporals.format(log.usedAt, 'yyyy-MM-dd (E)')}">날짜</span>
                     </div>
-                    <span th:if="${log.note}" class="text-sm text-gray-400" th:text="${log.note}">메모</span>
+                    <span th:if="${log.note}" class="text-xs md:text-sm text-gray-500 dark:text-gray-400" th:text="${log.note}">메모</span>
                 </div>
             </div>
         </div>

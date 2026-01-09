@@ -17,40 +17,100 @@
                             bg: '#0f0f0f',
                             card: '#1a1a1a',
                             border: '#2a2a2a'
+                        },
+                        light: {
+                            bg: '#f8fafc',
+                            card: '#ffffff',
+                            border: '#e2e8f0'
                         }
                     }
                 }
             }
         }
     </script>
+    <script>
+        // 테마 초기화 (FOUC 방지)
+        (function() {
+            const theme = localStorage.getItem('theme') || 'dark';
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
-        .calendar-cell { min-height: 100px; }
+        .calendar-cell { min-height: 80px; }
+        @media (min-width: 768px) {
+            .calendar-cell { min-height: 100px; }
+        }
     </style>
 </head>
-<body class="bg-dark-bg text-white min-h-screen flex flex-col">
+<body class="bg-light-bg dark:bg-dark-bg text-gray-900 dark:text-white min-h-screen flex flex-col transition-colors duration-200">
     <!-- Header -->
-    <header class="border-b border-dark-border px-6 py-4">
+    <header class="border-b border-light-border dark:border-dark-border px-4 md:px-6 py-3 md:py-4 bg-light-card dark:bg-dark-bg">
         <div class="max-w-6xl mx-auto flex items-center justify-between">
-            <a th:href="@{/}" class="text-xl font-semibold hover:text-gray-300 transition">
-                💰 가성비 트래커
+            <a th:href="@{/}" class="text-lg md:text-xl font-semibold hover:text-gray-600 dark:hover:text-gray-300 transition">
+                <span class="hidden sm:inline">💰 가성비 트래커</span>
+                <span class="sm:hidden">💰</span>
             </a>
-            <div class="flex gap-3">
+
+            <!-- Desktop Navigation -->
+            <div class="hidden md:flex items-center gap-3">
                 <a th:href="@{/calendar}"
-                   class="px-3 py-1.5 text-sm bg-dark-card rounded-lg border border-dark-border hover:border-gray-600 transition">
+                   class="px-3 py-1.5 text-sm bg-light-card dark:bg-dark-card rounded-lg border border-light-border dark:border-dark-border hover:border-gray-400 dark:hover:border-gray-600 transition">
                     📅 캘린더
                 </a>
                 <a th:href="@{/stats}"
-                   class="px-3 py-1.5 text-sm bg-dark-card rounded-lg border border-dark-border hover:border-gray-600 transition">
+                   class="px-3 py-1.5 text-sm bg-light-card dark:bg-dark-card rounded-lg border border-light-border dark:border-dark-border hover:border-gray-400 dark:hover:border-gray-600 transition">
                     📊 통계
                 </a>
                 <a th:href="@{/investments}"
-                   class="px-3 py-1.5 text-sm bg-dark-card rounded-lg border border-dark-border hover:border-gray-600 transition">
+                   class="px-3 py-1.5 text-sm bg-light-card dark:bg-dark-card rounded-lg border border-light-border dark:border-dark-border hover:border-gray-400 dark:hover:border-gray-600 transition">
                     📦 투자
                 </a>
                 <a th:href="@{/subscriptions/new}"
                    class="px-3 py-1.5 text-sm bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition">
+                    + 구독 추가
+                </a>
+                <!-- Theme Toggle -->
+                <button id="themeToggle" class="p-2 rounded-lg border border-light-border dark:border-dark-border hover:border-gray-400 dark:hover:border-gray-600 transition" title="테마 변경">
+                    <span id="themeIcon">🌙</span>
+                </button>
+            </div>
+
+            <!-- Mobile Navigation -->
+            <div class="flex md:hidden items-center gap-2">
+                <!-- Theme Toggle Mobile -->
+                <button id="themeToggleMobile" class="p-2 rounded-lg border border-light-border dark:border-dark-border" title="테마 변경">
+                    <span id="themeIconMobile">🌙</span>
+                </button>
+                <!-- Hamburger Menu -->
+                <button id="mobileMenuBtn" class="p-2 rounded-lg border border-light-border dark:border-dark-border">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div id="mobileMenu" class="hidden md:hidden mt-3 pt-3 border-t border-light-border dark:border-dark-border">
+            <div class="flex flex-col gap-2">
+                <a th:href="@{/calendar}"
+                   class="px-3 py-2 text-sm bg-light-card dark:bg-dark-card rounded-lg border border-light-border dark:border-dark-border">
+                    📅 캘린더
+                </a>
+                <a th:href="@{/stats}"
+                   class="px-3 py-2 text-sm bg-light-card dark:bg-dark-card rounded-lg border border-light-border dark:border-dark-border">
+                    📊 통계
+                </a>
+                <a th:href="@{/investments}"
+                   class="px-3 py-2 text-sm bg-light-card dark:bg-dark-card rounded-lg border border-light-border dark:border-dark-border">
+                    📦 투자
+                </a>
+                <a th:href="@{/subscriptions/new}"
+                   class="px-3 py-2 text-sm bg-emerald-500 text-white rounded-lg text-center">
                     + 구독 추가
                 </a>
             </div>
@@ -58,15 +118,65 @@
     </header>
 
     <!-- Main Content -->
-    <main class="max-w-6xl mx-auto px-6 py-8 flex-1 w-full">
+    <main class="max-w-6xl mx-auto px-4 md:px-6 py-6 md:py-8 flex-1 w-full">
         <th:block th:replace="${content}" />
     </main>
 
     <!-- Footer -->
-    <footer class="border-t border-dark-border px-6 py-4">
+    <footer class="border-t border-light-border dark:border-dark-border px-4 md:px-6 py-4 bg-light-card dark:bg-dark-bg">
         <div class="max-w-6xl mx-auto text-center text-sm text-gray-500">
             구독 가성비 트래커 &copy; 2025
         </div>
     </footer>
+
+    <script>
+        // 테마 토글 기능
+        function initTheme() {
+            const theme = localStorage.getItem('theme') || 'dark';
+            updateTheme(theme);
+        }
+
+        function updateTheme(theme) {
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+                updateThemeIcons('🌙');
+            } else {
+                document.documentElement.classList.remove('dark');
+                updateThemeIcons('☀️');
+            }
+            localStorage.setItem('theme', theme);
+        }
+
+        function updateThemeIcons(icon) {
+            const themeIcon = document.getElementById('themeIcon');
+            const themeIconMobile = document.getElementById('themeIconMobile');
+            if (themeIcon) themeIcon.textContent = icon;
+            if (themeIconMobile) themeIconMobile.textContent = icon;
+        }
+
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.contains('dark');
+            updateTheme(isDark ? 'light' : 'dark');
+        }
+
+        // 모바일 메뉴 토글
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('hidden');
+        }
+
+        // 이벤트 리스너
+        document.addEventListener('DOMContentLoaded', function() {
+            initTheme();
+
+            const themeToggle = document.getElementById('themeToggle');
+            const themeToggleMobile = document.getElementById('themeToggleMobile');
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+
+            if (themeToggle) themeToggle.addEventListener('click', toggleTheme);
+            if (themeToggleMobile) themeToggleMobile.addEventListener('click', toggleTheme);
+            if (mobileMenuBtn) mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+        });
+    </script>
 </body>
 </html>

@@ -7,30 +7,30 @@
 <body>
 <section>
     <div class="max-w-lg mx-auto">
-        <h2 class="text-2xl font-bold mb-6" th:text="${isEdit} ? '구독 수정' : '새 구독 추가'">새 구독 추가</h2>
+        <h2 class="text-xl md:text-2xl font-bold mb-4 md:mb-6" th:text="${isEdit} ? '구독 수정' : '새 구독 추가'">새 구독 추가</h2>
 
         <form th:action="${isEdit} ? @{/subscriptions/{id}(id=${subscriptionId})} : @{/subscriptions}"
               method="post"
               th:object="${form}"
-              class="space-y-5">
+              class="space-y-4 md:space-y-5">
 
             <!-- 이름 -->
             <div>
-                <label for="name" class="block text-sm font-medium text-gray-300 mb-2">서비스 이름</label>
+                <label for="name" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">서비스 이름</label>
                 <input type="text" id="name" th:field="*{name}"
                        placeholder="헬스장, 넷플릭스 등"
                        required
-                       class="w-full px-4 py-3 bg-dark-card border border-dark-border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 transition">
+                       class="w-full px-4 py-3 bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-emerald-500 transition">
             </div>
 
             <!-- 이모지 -->
             <div>
-                <label for="emojiCode" class="block text-sm font-medium text-gray-300 mb-2">아이콘</label>
+                <label for="emojiCode" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">아이콘</label>
                 <div class="relative">
                     <select id="emojiCode" th:field="*{emojiCode}"
                             required
                             onchange="updateEmojiPreview()"
-                            class="w-full px-4 py-3 pl-12 bg-dark-card border border-dark-border rounded-xl text-white focus:outline-none focus:border-emerald-500 transition appearance-none">
+                            class="w-full px-4 py-3 pl-12 bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500 transition appearance-none">
                         <option value="">선택하세요</option>
                         <option th:each="entry : ${emojiCodes}"
                                 th:value="${entry.key}"
@@ -47,17 +47,17 @@
 
             <!-- 기간 유형 -->
             <div>
-                <label class="block text-sm font-medium text-gray-300 mb-2">기간 유형</label>
+                <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">기간 유형</label>
                 <div class="flex gap-2">
                     <input type="number" id="periodNumber"
                            placeholder="1"
                            required min="1"
                            onchange="updatePeriodType()"
                            oninput="updatePeriodType()"
-                           class="w-24 px-4 py-3 bg-dark-card border border-dark-border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 transition text-center">
+                           class="w-20 md:w-24 px-3 md:px-4 py-3 bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-emerald-500 transition text-center">
                     <select id="periodUnit"
                             onchange="updatePeriodType()"
-                            class="flex-1 px-4 py-3 bg-dark-card border border-dark-border rounded-xl text-white focus:outline-none focus:border-emerald-500 transition">
+                            class="flex-1 px-4 py-3 bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500 transition">
                         <option value="개월">개월</option>
                         <option value="회">회</option>
                     </select>
@@ -68,9 +68,9 @@
             </div>
 
             <!-- 금액 -->
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-2 gap-3 md:gap-4">
                 <div>
-                    <label for="totalAmount" class="block text-sm font-medium text-gray-300 mb-2">총 금액</label>
+                    <label for="totalAmount" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">총 금액</label>
                     <div class="relative">
                         <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">₩</span>
                         <input type="number" id="totalAmount" th:field="*{totalAmount}"
@@ -78,12 +78,14 @@
                                required min="0"
                                onchange="calculateMonthlyAmount()"
                                oninput="calculateMonthlyAmount()"
-                               class="w-full pl-10 pr-4 py-3 bg-dark-card border border-dark-border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 transition">
+                               class="w-full pl-10 pr-4 py-3 bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-emerald-500 transition">
                     </div>
                 </div>
                 <div>
-                    <label for="monthlyAmount" class="block text-sm font-medium text-gray-300 mb-2">
-                        <span id="amountLabel">월 환산 금액</span> <span class="text-emerald-400">(자동계산)</span>
+                    <label for="monthlyAmount" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
+                        <span id="amountLabel" class="hidden md:inline">월 환산 금액</span>
+                        <span class="md:hidden">월 환산</span>
+                        <span class="text-emerald-500 dark:text-emerald-400 text-xs">(자동)</span>
                     </label>
                     <div class="relative">
                         <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">₩</span>
@@ -91,31 +93,31 @@
                                placeholder="자동 계산됨"
                                required min="0"
                                readonly
-                               class="w-full pl-10 pr-4 py-3 bg-dark-card border border-dark-border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 transition bg-white/5">
+                               class="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-dark-card border border-light-border dark:border-dark-border rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-emerald-500 transition dark:bg-white/5">
                     </div>
-                    <p id="amountHint" class="mt-1 text-xs text-gray-500">총 금액 ÷ 개월 수 (자동 계산)</p>
+                    <p id="amountHint" class="mt-1 text-xs text-gray-500 hidden md:block">총 금액 ÷ 개월 수 (자동 계산)</p>
                 </div>
             </div>
 
             <!-- 날짜 -->
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-2 gap-3 md:gap-4">
                 <div>
-                    <label for="startDate" class="block text-sm font-medium text-gray-300 mb-2">시작일</label>
+                    <label for="startDate" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">시작일</label>
                     <input type="date" id="startDate" th:field="*{startDate}"
                            required
-                           class="w-full px-4 py-3 bg-dark-card border border-dark-border rounded-xl text-white focus:outline-none focus:border-emerald-500 transition">
+                           class="w-full px-4 py-3 bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500 transition">
                 </div>
                 <div>
-                    <label for="endDate" class="block text-sm font-medium text-gray-300 mb-2">종료일 (선택)</label>
+                    <label for="endDate" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">종료일 (선택)</label>
                     <input type="date" id="endDate" th:field="*{endDate}"
-                           class="w-full px-4 py-3 bg-dark-card border border-dark-border rounded-xl text-white focus:outline-none focus:border-emerald-500 transition">
+                           class="w-full px-4 py-3 bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500 transition">
                 </div>
             </div>
 
             <!-- 버튼 -->
             <div class="flex gap-3 pt-4">
                 <a th:href="@{/}"
-                   class="flex-1 py-3 text-center bg-dark-card border border-dark-border rounded-xl text-gray-300 hover:bg-white/5 transition">
+                   class="flex-1 py-3 text-center bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 transition">
                     취소
                 </a>
                 <button type="submit"
@@ -165,11 +167,11 @@
 
             // 라벨 및 힌트 업데이트
             if (periodUnit === '개월') {
-                amountLabel.textContent = '월 환산 금액';
-                amountHint.textContent = '총 금액 ÷ 개월 수 (자동 계산)';
+                if (amountLabel) amountLabel.textContent = '월 환산 금액';
+                if (amountHint) amountHint.textContent = '총 금액 ÷ 개월 수 (자동 계산)';
             } else {
-                amountLabel.textContent = '회당 환산 금액';
-                amountHint.textContent = '총 금액 ÷ 횟수 (자동 계산)';
+                if (amountLabel) amountLabel.textContent = '회당 환산 금액';
+                if (amountHint) amountHint.textContent = '총 금액 ÷ 횟수 (자동 계산)';
             }
 
             if (!totalAmount || !periodNumber) {

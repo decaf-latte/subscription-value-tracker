@@ -3,83 +3,84 @@
 <body>
 <div th:fragment="calendarGrid" id="calendar-grid">
     <!-- 캘린더 섹션 -->
-    <div class="bg-dark-card rounded-2xl border border-dark-border p-6">
+    <div class="bg-light-card dark:bg-dark-card rounded-2xl border border-light-border dark:border-dark-border p-3 md:p-6">
         <!-- 캘린더 헤더 -->
-        <div class="flex items-center justify-between mb-6">
-            <div class="flex items-center gap-4">
-                <h2 class="text-2xl font-bold" th:text="${year} + '년 ' + ${month} + '월'">2025년 1월</h2>
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-0 mb-4 md:mb-6">
+            <div class="flex items-center justify-between md:justify-start gap-2 md:gap-4">
+                <h2 class="text-lg md:text-2xl font-bold" th:text="${year} + '년 ' + ${month} + '월'">2025년 1월</h2>
                 <div class="flex gap-1">
-                    <button class="p-2 hover:bg-white/10 rounded-lg transition"
+                    <button class="p-1.5 md:p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition"
                             hx-get th:hx-get="@{/calendar/grid(year=${prevYear}, month=${prevMonth})}"
                             hx-target="#calendar-grid"
                             hx-swap="outerHTML">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                         </svg>
                     </button>
                     <a th:href="@{/calendar}"
-                       class="px-3 py-1.5 text-sm bg-white/10 rounded-lg hover:bg-white/20 transition"
-                       th:classappend="${isCurrentMonth} ? 'bg-emerald-500/20 text-emerald-400' : ''">
+                       class="px-2 md:px-3 py-1 md:py-1.5 text-xs md:text-sm bg-gray-100 dark:bg-white/10 rounded-lg hover:bg-gray-200 dark:hover:bg-white/20 transition"
+                       th:classappend="${isCurrentMonth} ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400' : ''">
                         오늘
                     </a>
-                    <button class="p-2 hover:bg-white/10 rounded-lg transition"
+                    <button class="p-1.5 md:p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition"
                             hx-get th:hx-get="@{/calendar/grid(year=${nextYear}, month=${nextMonth})}"
                             hx-target="#calendar-grid"
                             hx-swap="outerHTML">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                         </svg>
                     </button>
                 </div>
             </div>
 
-            <!-- 범례 -->
-            <div class="flex gap-3 text-sm" th:if="${not #lists.isEmpty(subscriptions)}">
+            <!-- 범례 (모바일에서는 숨김) -->
+            <div class="hidden md:flex gap-3 text-sm" th:if="${not #lists.isEmpty(subscriptions)}">
                 <div th:each="sub : ${subscriptions}"
-                     class="flex items-center gap-1.5 px-2 py-1 bg-white/5 rounded-lg">
+                     class="flex items-center gap-1.5 px-2 py-1 bg-gray-100 dark:bg-white/5 rounded-lg">
                     <span th:text="${sub.emoji}">📌</span>
-                    <span class="text-gray-300 text-xs" th:text="${sub.name}">구독명</span>
+                    <span class="text-gray-600 dark:text-gray-300 text-xs" th:text="${sub.name}">구독명</span>
                 </div>
             </div>
         </div>
 
         <!-- 요일 헤더 -->
-        <div class="grid grid-cols-7 mb-2 border-b border-dark-border pb-2">
-            <div class="text-center text-sm font-medium text-red-400 py-2">일</div>
-            <div class="text-center text-sm font-medium text-gray-400 py-2">월</div>
-            <div class="text-center text-sm font-medium text-gray-400 py-2">화</div>
-            <div class="text-center text-sm font-medium text-gray-400 py-2">수</div>
-            <div class="text-center text-sm font-medium text-gray-400 py-2">목</div>
-            <div class="text-center text-sm font-medium text-gray-400 py-2">금</div>
-            <div class="text-center text-sm font-medium text-blue-400 py-2">토</div>
+        <div class="grid grid-cols-7 mb-2 border-b border-light-border dark:border-dark-border pb-2">
+            <div class="text-center text-xs md:text-sm font-medium text-red-500 dark:text-red-400 py-1 md:py-2">일</div>
+            <div class="text-center text-xs md:text-sm font-medium text-gray-500 dark:text-gray-400 py-1 md:py-2">월</div>
+            <div class="text-center text-xs md:text-sm font-medium text-gray-500 dark:text-gray-400 py-1 md:py-2">화</div>
+            <div class="text-center text-xs md:text-sm font-medium text-gray-500 dark:text-gray-400 py-1 md:py-2">수</div>
+            <div class="text-center text-xs md:text-sm font-medium text-gray-500 dark:text-gray-400 py-1 md:py-2">목</div>
+            <div class="text-center text-xs md:text-sm font-medium text-gray-500 dark:text-gray-400 py-1 md:py-2">금</div>
+            <div class="text-center text-xs md:text-sm font-medium text-blue-500 dark:text-blue-400 py-1 md:py-2">토</div>
         </div>
 
         <!-- 캘린더 그리드 -->
-        <div class="grid grid-cols-7 gap-1">
+        <div class="grid grid-cols-7 gap-0.5 md:gap-1">
             <div th:each="day : ${calendarDays}"
                  th:attr="data-date=${day.currentMonth ? day.date : ''}"
                  th:classappend="${day.currentMonth ? 'clickable-date' : ''}"
-                 th:class="${not day.currentMonth} ? 'calendar-cell p-2 text-gray-600 rounded-lg min-h-[100px]' : 'calendar-cell p-2 cursor-pointer transition min-h-[100px] ' + (${day.today} ? 'bg-white/10 ring-2 ring-emerald-500 rounded-xl' : 'rounded-lg hover:bg-white/5 border border-transparent hover:border-gray-700')">
+                 th:class="${not day.currentMonth} ? 'calendar-cell p-1 md:p-2 text-gray-400 dark:text-gray-600 rounded-lg' : 'calendar-cell p-1 md:p-2 cursor-pointer transition ' + (${day.today} ? 'bg-emerald-50 dark:bg-white/10 ring-2 ring-emerald-500 rounded-xl' : 'rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 border border-transparent hover:border-gray-200 dark:hover:border-gray-700')">
 
                 <!-- 날짜 표시 -->
-                <div class="flex items-center justify-between mb-2" th:if="${day.currentMonth}">
-                    <span class="text-sm font-medium"
-                          th:classappend="${day.date.dayOfWeek.name() == 'SUNDAY'} ? 'text-red-400' : (${day.date.dayOfWeek.name() == 'SATURDAY'} ? 'text-blue-400' : '')"
+                <div class="flex items-center justify-between mb-1 md:mb-2" th:if="${day.currentMonth}">
+                    <span class="text-xs md:text-sm font-medium"
+                          th:classappend="${day.date.dayOfWeek.name() == 'SUNDAY'} ? 'text-red-500 dark:text-red-400' : (${day.date.dayOfWeek.name() == 'SATURDAY'} ? 'text-blue-500 dark:text-blue-400' : '')"
                           th:text="${day.dayOfMonth}">1</span>
                     <span th:if="${day.today}"
-                          class="text-xs bg-emerald-500 text-white px-1.5 py-0.5 rounded">오늘</span>
+                          class="hidden md:inline text-xs bg-emerald-500 text-white px-1.5 py-0.5 rounded">오늘</span>
                 </div>
-                <div th:unless="${day.currentMonth}" class="mb-2">
-                    <span class="text-sm" th:text="${day.dayOfMonth}">1</span>
+                <div th:unless="${day.currentMonth}" class="mb-1 md:mb-2">
+                    <span class="text-xs md:text-sm" th:text="${day.dayOfMonth}">1</span>
                 </div>
 
                 <!-- 출석 기록 -->
-                <div th:if="${day.currentMonth and day.hasUsages()}" class="space-y-1">
+                <div th:if="${day.currentMonth and day.hasUsages()}" class="space-y-0.5 md:space-y-1">
                     <div th:each="usage : ${day.usages}"
-                         class="flex items-center gap-1.5 text-xs px-2 py-1 rounded-md"
-                         th:classappend="${usage.costLevel == 'good'} ? 'bg-emerald-500/20 text-emerald-300' : (${usage.costLevel == 'warning'} ? 'bg-red-500/20 text-red-300' : 'bg-yellow-500/20 text-yellow-300')">
-                        <span th:text="${usage.emoji}">🏋️</span>
-                        <span class="font-medium" th:text="'₩' + ${#numbers.formatInteger(usage.dailyCost, 0, 'COMMA')}">₩5,000</span>
+                         class="flex items-center gap-0.5 md:gap-1.5 text-xs px-1 md:px-2 py-0.5 md:py-1 rounded-md"
+                         th:classappend="${usage.costLevel == 'good'} ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300' : (${usage.costLevel == 'warning'} ? 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-300' : 'bg-yellow-100 dark:bg-yellow-500/20 text-yellow-700 dark:text-yellow-300')">
+                        <span class="text-xs md:text-sm" th:text="${usage.emoji}">🏋️</span>
+                        <span class="font-medium text-xs hidden md:inline" th:text="'₩' + ${#numbers.formatInteger(usage.dailyCost, 0, 'COMMA')}">₩5,000</span>
+                        <span class="font-medium text-xs md:hidden" th:text="'₩' + ${#numbers.formatInteger(usage.dailyCost / 1000, 0)}+'k'">₩5k</span>
                     </div>
                 </div>
             </div>
@@ -87,10 +88,10 @@
     </div>
 
     <!-- 설명 -->
-    <div class="mt-6 p-4 bg-white/5 rounded-xl text-sm text-gray-400">
-        <p><strong class="text-white">💡 일일 비용 계산 방식:</strong> 월 구독료 ÷ 이번 달 총 사용 횟수</p>
-        <p class="mt-1">출석을 추가하면 해당 서비스의 <strong class="text-emerald-400">모든 출석일 금액이 동시에 업데이트</strong>됩니다.</p>
-        <p class="mt-1"><strong class="text-white">📅 날짜 클릭:</strong> 캘린더의 날짜를 클릭하면 해당 날짜에 출석 체크할 수 있습니다.</p>
+    <div class="mt-4 md:mt-6 p-3 md:p-4 bg-gray-100 dark:bg-white/5 rounded-xl text-xs md:text-sm text-gray-600 dark:text-gray-400">
+        <p><strong class="text-gray-900 dark:text-white">💡 회당 비용 계산:</strong> 총 구독료 ÷ 총 사용 횟수</p>
+        <p class="mt-1">출석을 추가하면 해당 서비스의 <strong class="text-emerald-600 dark:text-emerald-400">모든 출석일 금액이 동시에 업데이트</strong>됩니다.</p>
+        <p class="mt-1"><strong class="text-gray-900 dark:text-white">📅 날짜 클릭:</strong> 캘린더의 날짜를 클릭하면 해당 날짜에 출석 체크할 수 있습니다.</p>
     </div>
 </div>
 </body>

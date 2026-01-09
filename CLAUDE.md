@@ -122,13 +122,20 @@ src/test/java/com/tracker/subscriptionvaluetracker/
 6. PRD.md, PROJECT_SPEC.md 체크리스트 업데이트
 7. DEVELOPMENT.md 업데이트 (새 엔티티, API, 다이어그램 추가)
 
-**커밋 메시지 형식:**
+**커밋 메시지 형식 (한글로 작성!):**
 ```
-[태스크] 작업 요약
+[타입] 작업 요약
 
 - 세부 변경사항 1
 - 세부 변경사항 2
 ```
+
+**타입:**
+- `기능`: 새로운 기능 추가
+- `수정`: 버그 수정
+- `문서`: 문서 수정
+- `리팩토링`: 코드 개선
+- `테스트`: 테스트 추가/수정
 
 ## Reference Documents
 

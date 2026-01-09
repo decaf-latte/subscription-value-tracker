@@ -109,20 +109,25 @@
     </div>
 
     <!-- 구독 데이터를 JavaScript에서 사용하기 위한 hidden 데이터 -->
-    <script th:if="${not #lists.isEmpty(subscriptions)}">
-        var subscriptionData = [
-            <th:block th:each="sub, stat : ${subscriptions}">
-            {
-                id: [[${sub.id}]],
-                name: '[[${sub.name}]]',
-                emoji: '[[${sub.emoji}]]',
-                monthlyAmount: [[${sub.monthlyAmount}]]
-            }<th:block th:if="${!stat.last}">,</th:block>
-            </th:block>
-        ];
-    </script>
-    <script th:if="${#lists.isEmpty(subscriptions)}">
+    <div id="subscription-data-container" style="display:none;">
+        <div th:each="sub : ${subscriptions}"
+             class="subscription-data-item"
+             th:data-id="${sub.id}"
+             th:data-name="${sub.name}"
+             th:data-emoji="${sub.emoji}"
+             th:data-amount="${sub.monthlyAmount}">
+        </div>
+    </div>
+    <script>
         var subscriptionData = [];
+        document.querySelectorAll('.subscription-data-item').forEach(function(el) {
+            subscriptionData.push({
+                id: parseInt(el.dataset.id, 10),
+                name: el.dataset.name,
+                emoji: el.dataset.emoji,
+                monthlyAmount: parseInt(el.dataset.amount, 10) || 0
+            });
+        });
     </script>
     <script>
         function openModal(date) {

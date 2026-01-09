@@ -53,13 +53,15 @@ public class CalendarService {
                 .map(Subscription::getId)
                 .toList();
 
-        // 해당 월의 모든 출석 기록 조회
+        // 해당 월의 출석 기록 조회 (캘린더 표시용)
         List<UsageLog> usageLogs = usageLogRepository.findBySubscriptionIdsAndDateRange(
                 subscriptionIds, firstDayOfMonth, lastDayOfMonth);
 
-        // 구독별 월간 사용 횟수 계산
-        Map<Long, Long> usageCountBySubscription = usageLogs.stream()
-                .collect(Collectors.groupingBy(UsageLog::getSubscriptionId, Collectors.counting()));
+        // 구독별 총 사용 횟수 계산 (전체 기간)
+        Map<Long, Long> totalUsageCountBySubscription = new HashMap<>();
+        for (Long subId : subscriptionIds) {
+            totalUsageCountBySubscription.put(subId, usageLogRepository.countBySubscriptionId(subId));
+        }
 
         // 구독 ID -> 구독 정보 맵
         Map<Long, Subscription> subscriptionMap = subscriptions.stream()
@@ -85,8 +87,8 @@ public class CalendarService {
                 for (UsageLog usage : dayUsages) {
                     Subscription sub = subscriptionMap.get(usage.getSubscriptionId());
                     if (sub != null) {
-                        long usageCount = usageCountBySubscription.getOrDefault(sub.getId(), 1L);
-                        BigDecimal dailyCost = calculateDailyCost(sub.getMonthlyAmount(), usageCount);
+                        long totalUsageCount = totalUsageCountBySubscription.getOrDefault(sub.getId(), 1L);
+                        BigDecimal dailyCost = calculateCostPerUse(sub, totalUsageCount);
                         String costLevel = getDailyCostLevel(dailyCost, sub.getMonthlyAmount());
                         String emoji = EmojiMapper.toEmoji(sub.getEmojiCode());
 
@@ -134,11 +136,24 @@ public class CalendarService {
         return days;
     }
 
-    private BigDecimal calculateDailyCost(BigDecimal monthlyAmount, long usageCount) {
-        if (usageCount == 0) {
-            return monthlyAmount;
+    /**
+     * 회당 비용 계산: 총 지불 금액 / 총 사용 횟수
+     */
+    private BigDecimal calculateCostPerUse(Subscription subscription, long totalUsageCount) {
+        if (totalUsageCount == 0) {
+            return subscription.getMonthlyAmount();
         }
-        return monthlyAmount.divide(BigDecimal.valueOf(usageCount), 0, RoundingMode.HALF_UP);
+
+        // 구독 시작월부터 현재월까지 몇 개월인지 계산
+        YearMonth startMonth = YearMonth.from(subscription.getStartDate());
+        YearMonth currentMonth = YearMonth.now();
+        long monthsPaid = startMonth.until(currentMonth, java.time.temporal.ChronoUnit.MONTHS) + 1;
+
+        // 총 지불 금액 = 월 금액 × 개월 수
+        BigDecimal totalPaid = subscription.getMonthlyAmount().multiply(BigDecimal.valueOf(monthsPaid));
+
+        // 회당 비용 = 총 지불 금액 / 총 사용 횟수
+        return totalPaid.divide(BigDecimal.valueOf(totalUsageCount), 0, RoundingMode.HALF_UP);
     }
 
     private String getDailyCostLevel(BigDecimal dailyCost, BigDecimal monthlyAmount) {

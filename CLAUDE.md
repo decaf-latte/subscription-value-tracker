@@ -33,22 +33,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Architecture
 
-Single Spring Boot project with server-side rendering:
+Single Spring Boot project with server-side rendering (DDD-style structure):
 
 ```
 src/main/java/com/tracker/subscriptionvaluetracker/
+├── common/               # Utilities (UserIdentifier, EmojiMapper)
 ├── domain/
-│   ├── subscription/     # Subscription entity, repository, service, controller
-│   └── investment/       # Investment entity, repository, service, controller
-└── web/                  # Dashboard and page controllers
+│   ├── subscription/     # Entity, Repository, Service, Controller, DTOs
+│   └── investment/       # Entity, Repository, Service, Controller, DTOs
+└── web/                  # Dashboard and Calendar controllers
 
-src/main/resources/
-├── templates/            # Thymeleaf templates
-│   ├── layout/          # Common layouts
-│   ├── subscription/    # Subscription CRUD views
-│   ├── investment/      # Investment CRUD views
-│   └── fragments/       # Reusable components
-└── static/              # Static assets
+src/main/resources/templates/
+├── layout/default.html   # Common layout (header, Tailwind, HTMX)
+├── index.html            # Dashboard
+├── subscription/         # Subscription CRUD views
+└── investment/           # Investment CRUD views
 ```
 
 ## Key Domain Concepts
@@ -89,10 +88,13 @@ src/main/resources/
 **테스트 구조:**
 ```
 src/test/java/com/tracker/subscriptionvaluetracker/
-├── domain/subscription/
-│   ├── SubscriptionServiceTest.java    # 서비스 단위 테스트
-│   ├── SubscriptionControllerTest.java # 컨트롤러 단위 테스트
-│   └── CalendarServiceTest.java        # 캘린더 서비스 테스트
+├── domain/
+│   ├── subscription/
+│   │   ├── SubscriptionServiceTest.java    # 서비스 단위 테스트
+│   │   ├── SubscriptionControllerTest.java # 컨트롤러 단위 테스트
+│   │   └── CalendarServiceTest.java        # 캘린더 서비스 테스트
+│   └── investment/
+│       └── InvestmentServiceTest.java      # 투자 서비스 테스트
 ├── common/
 │   ├── EmojiMapperTest.java            # 유틸리티 테스트
 │   └── UserIdentifierTest.java         # 사용자 식별 테스트

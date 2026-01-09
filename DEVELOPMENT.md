@@ -394,6 +394,15 @@ src/main/resources/templates/
 | POST | `/subscriptions/{id}` | 구독 수정 | SubscriptionController |
 | POST | `/subscriptions/{id}/delete` | 구독 삭제 (soft delete) | SubscriptionController |
 | POST | `/subscriptions/{id}/check-in` | 출석 체크 | SubscriptionController |
+| GET | `/investments` | 투자 목록 | InvestmentController |
+| GET | `/investments/new` | 투자 등록 폼 | InvestmentController |
+| POST | `/investments` | 투자 등록 | InvestmentController |
+| GET | `/investments/{id}` | 투자 상세 | InvestmentController |
+| GET | `/investments/{id}/edit` | 투자 수정 폼 | InvestmentController |
+| POST | `/investments/{id}` | 투자 수정 | InvestmentController |
+| POST | `/investments/{id}/delete` | 투자 삭제 (soft delete) | InvestmentController |
+| POST | `/investments/{id}/usage` | 사용 기록 추가 | InvestmentController |
+| POST | `/investments/{id}/usage/{usageId}/delete` | 사용 기록 삭제 | InvestmentController |
 
 ---
 
@@ -404,10 +413,14 @@ src/main/resources/templates/
 src/test/java/com/tracker/subscriptionvaluetracker/
 ├── SubscriptionValueTrackerApplicationTests.java  # 통합 테스트
 │
-├── domain/subscription/
-│   ├── SubscriptionServiceTest.java     # 서비스 단위 테스트 (25+ 테스트)
-│   ├── SubscriptionControllerTest.java  # 컨트롤러 단위 테스트 (10+ 테스트)
-│   └── CalendarServiceTest.java         # 캘린더 서비스 테스트 (5+ 테스트)
+├── domain/
+│   ├── subscription/
+│   │   ├── SubscriptionServiceTest.java     # 서비스 단위 테스트 (25+ 테스트)
+│   │   ├── SubscriptionControllerTest.java  # 컨트롤러 단위 테스트 (10+ 테스트)
+│   │   └── CalendarServiceTest.java         # 캘린더 서비스 테스트 (5+ 테스트)
+│   └── investment/
+│       ├── InvestmentServiceTest.java       # 투자 서비스 테스트 (20+ 테스트)
+│       └── InvestmentControllerTest.java    # 투자 컨트롤러 테스트 (10+ 테스트)
 │
 ├── common/
 │   ├── EmojiMapperTest.java             # 이모지 변환 테스트
@@ -437,6 +450,8 @@ open build/reports/tests/test/index.html
 | SubscriptionController | 목록 조회, 폼 표시, 생성/수정/삭제, 출석 체크 |
 | CalendarService | 캘린더 데이터 생성, 출석 기록 표시, 범례 조회 |
 | CalendarController | 캘린더 페이지, 그리드 HTMX, 월 이동, 통계 계산 |
+| InvestmentService | 투자 CRUD, 사용기록 추가/삭제, 손익분기점 계산, 절약액 계산 |
+| InvestmentController | 목록 조회, 상세 조회, 폼 표시, 생성/수정/삭제, 사용기록 관리 |
 | EmojiMapper | 코드→이모지 변환, 기본값 처리, 전체 코드 조회 |
 | UserIdentifier | UUID 쿠키 생성/조회, 쿠키 설정 검증 |
 
@@ -454,10 +469,10 @@ open build/reports/tests/test/index.html
 - ~~캘린더 날짜 클릭 시 출석 체크~~
 - ~~구독 선택 모달~~
 
-### Phase 3: 투자형 항목
-- Investment 엔티티
-- 손익분기점 계산
-- 절약액 추적
+### ~~Phase 3: 투자형 항목~~ ✅ 완료
+- ~~Investment 엔티티~~
+- ~~손익분기점 계산~~
+- ~~절약액 추적~~
 
 ### Phase 4: 차트
 - Chart.js 월별 사용 추이

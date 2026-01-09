@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/default :: layout(~{::title/text()}, ~{::section})}">
+<head>
+    <title th:text="${isEdit} ? '투자 수정' : '투자 추가'">투자 추가</title>
+</head>
+<body>
+<section>
+    <div class="max-w-lg mx-auto">
+        <h2 class="text-2xl font-bold mb-6" th:text="${isEdit} ? '투자 항목 수정' : '새 투자 항목 추가'">새 투자 항목 추가</h2>
+
+        <form th:action="${isEdit} ? @{/investments/{id}(id=${investmentId})} : @{/investments}"
+              method="post"
+              th:object="${form}"
+              class="space-y-5">
+
+            <!-- 이름 -->
+            <div>
+                <label for="name" class="block text-sm font-medium text-gray-300 mb-2">항목 이름</label>
+                <input type="text" id="name" th:field="*{name}"
+                       placeholder="크레마 카르타, 연간 이용권 등"
+                       required
+                       class="w-full px-4 py-3 bg-dark-card border border-dark-border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition">
+            </div>
+
+            <!-- 카테고리 -->
+            <div>
+                <label for="category" class="block text-sm font-medium text-gray-300 mb-2">카테고리</label>
+                <select id="category" th:field="*{category}"
+                        required
+                        class="w-full px-4 py-3 bg-dark-card border border-dark-border rounded-xl text-white focus:outline-none focus:border-blue-500 transition">
+                    <option value="">선택하세요</option>
+                    <option th:each="entry : ${categories}"
+                            th:value="${entry.key}"
+                            th:text="${entry.value}">
+                    </option>
+                </select>
+            </div>
+
+            <!-- 이모지 -->
+            <div>
+                <label for="emojiCode" class="block text-sm font-medium text-gray-300 mb-2">아이콘</label>
+                <select id="emojiCode" th:field="*{emojiCode}"
+                        required
+                        class="w-full px-4 py-3 bg-dark-card border border-dark-border rounded-xl text-white focus:outline-none focus:border-blue-500 transition">
+                    <option value="">선택하세요</option>
+                    <option th:each="entry : ${emojiCodes}"
+                            th:value="${entry.key}"
+                            th:text="${entry.value} + ' ' + ${entry.key}">
+                    </option>
+                </select>
+            </div>
+
+            <!-- 구매 정보 -->
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label for="purchasePrice" class="block text-sm font-medium text-gray-300 mb-2">구매 가격</label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">₩</span>
+                        <input type="number" id="purchasePrice" th:field="*{purchasePrice}"
+                               placeholder="189000"
+                               required min="0"
+                               class="w-full pl-10 pr-4 py-3 bg-dark-card border border-dark-border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition">
+                    </div>
+                </div>
+                <div>
+                    <label for="purchaseDate" class="block text-sm font-medium text-gray-300 mb-2">구매일</label>
+                    <input type="date" id="purchaseDate" th:field="*{purchaseDate}"
+                           required
+                           class="w-full px-4 py-3 bg-dark-card border border-dark-border rounded-xl text-white focus:outline-none focus:border-blue-500 transition">
+                </div>
+            </div>
+
+            <!-- 비교 기준 단가 -->
+            <div>
+                <label for="comparisonBaseline" class="block text-sm font-medium text-gray-300 mb-2">비교 기준 단가</label>
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">₩</span>
+                    <input type="number" id="comparisonBaseline" th:field="*{comparisonBaseline}"
+                           placeholder="15000"
+                           required min="0"
+                           class="w-full pl-10 pr-4 py-3 bg-dark-card border border-dark-border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition">
+                </div>
+                <p class="mt-1 text-xs text-gray-500">예: 종이책 평균가 (손익분기점 예상 계산에 사용)</p>
+            </div>
+
+            <!-- 메모 -->
+            <div>
+                <label for="note" class="block text-sm font-medium text-gray-300 mb-2">메모 (선택)</label>
+                <textarea id="note" th:field="*{note}"
+                          placeholder="추가 정보나 메모를 입력하세요"
+                          rows="2"
+                          class="w-full px-4 py-3 bg-dark-card border border-dark-border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition resize-none"></textarea>
+            </div>
+
+            <!-- 버튼 -->
+            <div class="flex gap-3 pt-4">
+                <a th:href="@{/investments}"
+                   class="flex-1 py-3 text-center bg-dark-card border border-dark-border rounded-xl text-gray-300 hover:bg-white/5 transition">
+                    취소
+                </a>
+                <button type="submit"
+                        class="flex-1 py-3 bg-blue-500 text-white rounded-xl font-medium hover:bg-blue-600 transition"
+                        th:text="${isEdit} ? '수정하기' : '등록하기'">
+                    등록하기
+                </button>
+            </div>
+        </form>
+    </div>
+</section>
+</body>
+</html>

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/default :: layout(~{::title/text()}, ~{::section})}">
+<head>
+    <title>투자 목록</title>
+</head>
+<body>
+<section>
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold">내 투자 항목</h2>
+        <a th:href="@{/investments/new}"
+           class="px-4 py-2 bg-blue-500 text-white rounded-xl font-medium hover:bg-blue-600 transition">
+            + 투자 추가
+        </a>
+    </div>
+
+    <!-- 투자 없을 때 -->
+    <div th:if="${#lists.isEmpty(investments)}" class="text-center py-16">
+        <p class="text-6xl mb-4">📦</p>
+        <p class="text-xl text-gray-400 mb-4">아직 등록된 투자 항목이 없습니다</p>
+        <p class="text-gray-500 mb-6">이북 리더기, 연간 이용권 등 초기 투자 비용이 있는 항목을 추가해보세요</p>
+        <a th:href="@{/investments/new}"
+           class="inline-block px-6 py-3 bg-blue-500 text-white rounded-xl font-medium hover:bg-blue-600 transition">
+            첫 투자 항목 등록하기
+        </a>
+    </div>
+
+    <!-- 투자 카드 목록 -->
+    <div th:unless="${#lists.isEmpty(investments)}" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <a th:each="inv : ${investments}"
+           th:href="@{/investments/{id}(id=${inv.id})}"
+           class="block bg-dark-card rounded-2xl p-5 border border-dark-border hover:border-blue-500/50 transition cursor-pointer">
+
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-3">
+                    <span class="text-3xl" th:text="${inv.emoji}">📦</span>
+                    <div>
+                        <h3 class="font-semibold text-lg" th:text="${inv.name}">항목명</h3>
+                        <p class="text-sm text-gray-400" th:text="${inv.category == 'E_READER'} ? '이북 리더기' : (${inv.category == 'ANNUAL_PASS'} ? '연간 이용권' : (${inv.category == 'EQUIPMENT'} ? '장비' : '기타'))">카테고리</p>
+                    </div>
+                </div>
+                <!-- 손익분기점 달성 배지 -->
+                <span th:if="${inv.breakEvenReached}"
+                      class="px-3 py-1 bg-emerald-500/20 text-emerald-400 text-xs font-medium rounded-full">
+                    손익분기 달성!
+                </span>
+            </div>
+
+            <!-- 프로그레스 바 -->
+            <div class="mb-4">
+                <div class="flex justify-between text-xs text-gray-400 mb-1">
+                    <span>손익분기점</span>
+                    <span th:text="${inv.breakEvenProgress} + '%'">0%</span>
+                </div>
+                <div class="h-2 bg-white/10 rounded-full overflow-hidden">
+                    <div class="h-full rounded-full transition-all duration-500"
+                         th:classappend="${inv.breakEvenReached} ? 'bg-emerald-500' : 'bg-blue-500'"
+                         th:style="'width: ' + ${inv.breakEvenProgress} + '%'"></div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div class="bg-white/5 rounded-xl p-3">
+                    <p class="text-xs text-gray-400 mb-1">구매가</p>
+                    <p class="text-lg font-bold" th:text="'₩' + ${#numbers.formatInteger(inv.purchasePrice, 0, 'COMMA')}">₩0</p>
+                </div>
+                <div class="bg-white/5 rounded-xl p-3">
+                    <p class="text-xs text-gray-400 mb-1">총 절약액</p>
+                    <p class="text-lg font-bold text-emerald-400" th:text="'₩' + ${#numbers.formatInteger(inv.totalSavings, 0, 'COMMA')}">₩0</p>
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center p-3 bg-white/5 rounded-xl">
+                <span class="text-sm text-gray-400">사용 횟수</span>
+                <span class="text-xl font-bold">
+                    <span th:text="${inv.usageCount}">0</span>
+                    <span class="text-sm text-gray-500">회</span>
+                </span>
+            </div>
+        </a>
+    </div>
+</section>
+</body>
+</html>

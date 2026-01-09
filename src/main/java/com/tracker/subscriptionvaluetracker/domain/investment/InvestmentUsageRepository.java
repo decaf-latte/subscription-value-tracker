@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 public interface InvestmentUsageRepository extends JpaRepository<InvestmentUsage, Long> {
@@ -17,4 +18,10 @@ public interface InvestmentUsageRepository extends JpaRepository<InvestmentUsage
     BigDecimal calculateTotalSavings(@Param("investmentId") Long investmentId);
 
     List<InvestmentUsage> findTop5ByInvestmentIdOrderByUsedAtDesc(Long investmentId);
+
+    @Query("SELECT COALESCE(SUM(u.originalPrice - u.actualPrice), 0) FROM InvestmentUsage u " +
+           "WHERE u.investmentId = :investmentId AND u.usedAt BETWEEN :startDate AND :endDate")
+    BigDecimal calculateMonthlySavings(@Param("investmentId") Long investmentId,
+                                       @Param("startDate") LocalDate startDate,
+                                       @Param("endDate") LocalDate endDate);
 }

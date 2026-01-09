@@ -6,6 +6,7 @@
     <title th:text="${pageTitle} ? ${pageTitle} + ' - 가성비 트래커' : '가성비 트래커'">가성비 트래커</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -39,6 +40,10 @@
                 <a th:href="@{/calendar}"
                    class="px-3 py-1.5 text-sm bg-dark-card rounded-lg border border-dark-border hover:border-gray-600 transition">
                     📅 캘린더
+                </a>
+                <a th:href="@{/stats}"
+                   class="px-3 py-1.5 text-sm bg-dark-card rounded-lg border border-dark-border hover:border-gray-600 transition">
+                    📊 통계
                 </a>
                 <a th:href="@{/investments}"
                    class="px-3 py-1.5 text-sm bg-dark-card rounded-lg border border-dark-border hover:border-gray-600 transition">

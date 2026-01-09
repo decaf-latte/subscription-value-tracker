@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/default :: layout(~{::title/text()}, ~{::section})}">
+<head>
+    <title>통계</title>
+</head>
+<body>
+<section>
+    <!-- 요약 섹션 -->
+    <div class="mb-8">
+        <h1 class="text-2xl font-bold mb-4">통계</h1>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-dark-card rounded-2xl p-4 border border-dark-border">
+                <p class="text-gray-400 text-sm mb-1">활성 구독</p>
+                <p class="text-2xl font-bold">
+                    <span th:text="${summary.subscriptionCount}">0</span>
+                    <span class="text-base text-gray-500">개</span>
+                </p>
+            </div>
+            <div class="bg-dark-card rounded-2xl p-4 border border-dark-border">
+                <p class="text-gray-400 text-sm mb-1">월 총 구독료</p>
+                <p class="text-2xl font-bold text-emerald-400" th:text="'₩' + ${#numbers.formatInteger(summary.totalMonthlyFee, 0, 'COMMA')}">₩0</p>
+            </div>
+            <div class="bg-dark-card rounded-2xl p-4 border border-dark-border">
+                <p class="text-gray-400 text-sm mb-1">활성 투자</p>
+                <p class="text-2xl font-bold">
+                    <span th:text="${summary.investmentCount}">0</span>
+                    <span class="text-base text-gray-500">개</span>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 차트 그리드 -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- 월별 사용 추이 -->
+        <div class="bg-dark-card rounded-2xl p-6 border border-dark-border">
+            <h2 class="text-lg font-semibold mb-4">월별 사용 횟수</h2>
+            <div class="h-64">
+                <canvas id="monthlyUsageChart"></canvas>
+            </div>
+        </div>
+
+        <!-- 구독별 비용 비교 -->
+        <div class="bg-dark-card rounded-2xl p-6 border border-dark-border">
+            <h2 class="text-lg font-semibold mb-4">구독별 월 비용</h2>
+            <div class="h-64">
+                <canvas id="costComparisonChart"></canvas>
+            </div>
+        </div>
+
+        <!-- 투자 절약액 추이 -->
+        <div class="bg-dark-card rounded-2xl p-6 border border-dark-border lg:col-span-2">
+            <h2 class="text-lg font-semibold mb-4">월별 투자 절약액</h2>
+            <div class="h-64">
+                <canvas id="investmentSavingsChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        document.addEventListener('DOMContentLoaded', function() {
+            const chartOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#9CA3AF'
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: { color: '#9CA3AF' },
+                        grid: { color: '#2A2A2A' }
+                    },
+                    y: {
+                        ticks: { color: '#9CA3AF' },
+                        grid: { color: '#2A2A2A' }
+                    }
+                }
+            };
+
+            // 월별 사용 추이 차트
+            fetch('/stats/api/monthly-usage')
+                .then(response => response.json())
+                .then(data => {
+                    new Chart(document.getElementById('monthlyUsageChart'), {
+                        type: 'line',
+                        data: {
+                            labels: data.labels,
+                            datasets: [{
+                                label: '사용 횟수',
+                                data: data.data,
+                                borderColor: '#10B981',
+                                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                                fill: true,
+                                tension: 0.4
+                            }]
+                        },
+                        options: chartOptions
+                    });
+                });
+
+            // 구독별 비용 비교 차트
+            fetch('/stats/api/cost-comparison')
+                .then(response => response.json())
+                .then(data => {
+                    const colors = [
+                        '#10B981', '#3B82F6', '#F59E0B', '#EF4444',
+                        '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16'
+                    ];
+                    new Chart(document.getElementById('costComparisonChart'), {
+                        type: 'doughnut',
+                        data: {
+                            labels: data.labels,
+                            datasets: [{
+                                data: data.data,
+                                backgroundColor: colors.slice(0, data.labels.length),
+                                borderWidth: 0
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'right',
+                                    labels: {
+                                        color: '#9CA3AF',
+                                        padding: 15
+                                    }
+                                }
+                            }
+                        }
+                    });
+                });
+
+            // 투자 절약액 추이 차트
+            fetch('/stats/api/investment-savings')
+                .then(response => response.json())
+                .then(data => {
+                    new Chart(document.getElementById('investmentSavingsChart'), {
+                        type: 'bar',
+                        data: {
+                            labels: data.labels,
+                            datasets: [{
+                                label: '절약액',
+                                data: data.data,
+                                backgroundColor: '#3B82F6',
+                                borderRadius: 8
+                            }]
+                        },
+                        options: chartOptions
+                    });
+                });
+        });
+    </script>
+</section>
+</body>
+</html>

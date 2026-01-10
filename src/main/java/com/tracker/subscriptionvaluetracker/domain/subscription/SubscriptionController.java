@@ -10,7 +10,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/subscriptions")
@@ -61,9 +63,14 @@ public class SubscriptionController {
                          HttpServletResponse response,
                          RedirectAttributes redirectAttributes) {
         String userUuid = UserIdentifier.getUserUuid(request, response);
-        subscriptionService.createSubscription(userUuid, form);
-        redirectAttributes.addFlashAttribute("message", "구독이 등록되었습니다.");
-        return "redirect:/calendar";
+        try {
+            subscriptionService.createSubscription(userUuid, form);
+            redirectAttributes.addFlashAttribute("message", "구독이 등록되었습니다.");
+            return "redirect:/calendar";
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/calendar";
+        }
     }
 
     @GetMapping("/{id}/edit")
@@ -82,6 +89,28 @@ public class SubscriptionController {
         return "subscription/form";
     }
 
+    @GetMapping("/{id}/json")
+    @ResponseBody
+    public Map<String, Object> getSubscriptionJson(@PathVariable Long id,
+                                                   HttpServletRequest request,
+                                                   HttpServletResponse response) {
+        String userUuid = UserIdentifier.getUserUuid(request, response);
+        Subscription subscription = subscriptionService.getSubscription(id, userUuid)
+                .orElseThrow(() -> new IllegalArgumentException("구독을 찾을 수 없습니다."));
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("id", subscription.getId());
+        result.put("name", subscription.getName());
+        result.put("emojiCode", subscription.getEmojiCode());
+        result.put("periodType", subscription.getPeriodType());
+        result.put("totalAmount", subscription.getTotalAmount());
+        result.put("monthlyAmount", subscription.getMonthlyAmount());
+        result.put("startDate", subscription.getStartDate().toString());
+        result.put("endDate", subscription.getEndDate() != null ? subscription.getEndDate().toString() : null);
+        result.put("monthlyTargetUsage", subscription.getMonthlyTargetUsage());
+        return result;
+    }
+
     @PostMapping("/{id}")
     public String update(@PathVariable Long id,
                          @ModelAttribute SubscriptionForm form,
@@ -89,9 +118,14 @@ public class SubscriptionController {
                          HttpServletResponse response,
                          RedirectAttributes redirectAttributes) {
         String userUuid = UserIdentifier.getUserUuid(request, response);
-        subscriptionService.updateSubscription(id, userUuid, form);
-        redirectAttributes.addFlashAttribute("message", "구독이 수정되었습니다.");
-        return "redirect:/subscriptions/" + id;
+        try {
+            subscriptionService.updateSubscription(id, userUuid, form);
+            redirectAttributes.addFlashAttribute("message", "구독이 수정되었습니다.");
+            return "redirect:/subscriptions/" + id;
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/subscriptions/" + id + "/edit";
+        }
     }
 
     @PostMapping("/{id}/delete")

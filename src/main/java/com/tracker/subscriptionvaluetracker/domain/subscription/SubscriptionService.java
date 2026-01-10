@@ -25,6 +25,12 @@ public class SubscriptionService {
     }
 
     public List<Subscription> getActiveSubscriptions(String userUuid) {
+        // 현재 구독중인 것만 반환 (종료일이 없거나 아직 지나지 않은 것)
+        return subscriptionRepository.findCurrentSubscriptions(userUuid, LocalDate.now());
+    }
+
+    public List<Subscription> getAllActiveSubscriptions(String userUuid) {
+        // 종료일과 관계없이 isActive=true인 모든 구독 반환 (관리 목적)
         return subscriptionRepository.findByUserUuidAndIsActiveTrueOrderByCreatedAtDesc(userUuid);
     }
 
@@ -32,8 +38,20 @@ public class SubscriptionService {
         return subscriptionRepository.findByIdAndUserUuid(id, userUuid);
     }
 
+    public boolean isDuplicateName(String userUuid, String name) {
+        return subscriptionRepository.existsByUserUuidAndNameAndIsActiveTrue(userUuid, name);
+    }
+
+    public boolean isDuplicateNameForUpdate(String userUuid, String name, Long excludeId) {
+        return subscriptionRepository.existsByUserUuidAndNameAndIdNotAndIsActiveTrue(userUuid, name, excludeId);
+    }
+
     @Transactional
     public Subscription createSubscription(String userUuid, SubscriptionForm form) {
+        if (isDuplicateName(userUuid, form.getName())) {
+            throw new IllegalArgumentException("이미 등록된 구독 이름입니다: " + form.getName());
+        }
+
         Subscription subscription = new Subscription(
                 userUuid,
                 form.getName(),
@@ -46,6 +64,9 @@ public class SubscriptionService {
         if (form.getEndDate() != null) {
             subscription.setEndDate(form.getEndDate());
         }
+        if (form.getMonthlyTargetUsage() != null && form.getMonthlyTargetUsage() > 0) {
+            subscription.setMonthlyTargetUsage(form.getMonthlyTargetUsage());
+        }
         return subscriptionRepository.save(subscription);
     }
 
@@ -54,6 +75,10 @@ public class SubscriptionService {
         Subscription subscription = subscriptionRepository.findByIdAndUserUuid(id, userUuid)
                 .orElseThrow(() -> new IllegalArgumentException("구독을 찾을 수 없습니다."));
 
+        if (isDuplicateNameForUpdate(userUuid, form.getName(), id)) {
+            throw new IllegalArgumentException("이미 등록된 구독 이름입니다: " + form.getName());
+        }
+
         subscription.setName(form.getName());
         subscription.setEmojiCode(form.getEmojiCode());
         subscription.setPeriodType(form.getPeriodType());
@@ -61,6 +86,10 @@ public class SubscriptionService {
         subscription.setMonthlyAmount(form.getMonthlyAmount());
         subscription.setStartDate(form.getStartDate());
         subscription.setEndDate(form.getEndDate());
+        subscription.setMonthlyTargetUsage(
+                form.getMonthlyTargetUsage() != null && form.getMonthlyTargetUsage() > 0
+                        ? form.getMonthlyTargetUsage() : null
+        );
 
         return subscriptionRepository.save(subscription);
     }
@@ -137,27 +166,30 @@ public class SubscriptionService {
     }
 
     /**
-     * 회당 비용 계산: 총 지불 금액 / 총 사용 횟수
-     * - 구독 기간(periodType)에 따른 총 금액 사용
-     * - 총 지불 금액 / 총 사용 횟수 = 회당 비용
+     * 월별 회당 비용 계산: 월 환산 금액 / 이번 달 사용 횟수
      */
-    public BigDecimal calculateDailyCost(Subscription subscription) {
-        int totalUsageCount = getTotalUsageCount(subscription.getId());
-        if (totalUsageCount == 0) {
+    public BigDecimal calculateMonthlyDailyCost(Subscription subscription) {
+        int monthlyUsageCount = getMonthlyUsageCount(subscription.getId());
+        if (monthlyUsageCount == 0) {
             return subscription.getMonthlyAmount();
         }
 
-        // 총 지불 금액 = 구독 총 금액 (선불 기준)
-        BigDecimal totalPaid = subscription.getTotalAmount();
+        // 월 환산 금액 기준으로 회당 비용 계산
+        BigDecimal monthlyAmount = subscription.getMonthlyAmount();
 
-        // 회당 비용 = 총 지불 금액 / 총 사용 횟수
-        return totalPaid.divide(BigDecimal.valueOf(totalUsageCount), 0, RoundingMode.HALF_UP);
+        // 회당 비용 = 월 환산 금액 / 이번 달 사용 횟수
+        return monthlyAmount.divide(BigDecimal.valueOf(monthlyUsageCount), 0, RoundingMode.HALF_UP);
     }
 
-    public String getDailyCostLevel(BigDecimal dailyCost, BigDecimal totalAmount) {
-        // 총 금액 기준: 20회 이상 사용 시 good, 10~20회 normal, 10회 미만 warning
-        BigDecimal goodThreshold = totalAmount.divide(BigDecimal.valueOf(20), 0, RoundingMode.HALF_UP);
-        BigDecimal normalThreshold = totalAmount.divide(BigDecimal.valueOf(10), 0, RoundingMode.HALF_UP);
+    /**
+     * 월별 가성비 레벨 계산 (월 환산 금액 기준)
+     * - 20회 이상 사용 시 good (회당 비용 <= 월금액/20)
+     * - 10~20회 사용 시 normal (회당 비용 <= 월금액/10)
+     * - 10회 미만 사용 시 warning
+     */
+    public String getMonthlyDailyCostLevel(BigDecimal dailyCost, BigDecimal monthlyAmount) {
+        BigDecimal goodThreshold = monthlyAmount.divide(BigDecimal.valueOf(20), 0, RoundingMode.HALF_UP);
+        BigDecimal normalThreshold = monthlyAmount.divide(BigDecimal.valueOf(10), 0, RoundingMode.HALF_UP);
 
         if (dailyCost.compareTo(goodThreshold) <= 0) {
             return "good";
@@ -177,9 +209,10 @@ public class SubscriptionService {
     }
 
     public SubscriptionViewDto toViewDto(Subscription subscription) {
-        int usageCount = getTotalUsageCount(subscription.getId());
-        BigDecimal dailyCost = calculateDailyCost(subscription);
-        String dailyCostLevel = getDailyCostLevel(dailyCost, subscription.getTotalAmount());
+        // 이번 달 사용 횟수 기준으로 계산
+        int monthlyUsageCount = getMonthlyUsageCount(subscription.getId());
+        BigDecimal dailyCost = calculateMonthlyDailyCost(subscription);
+        String dailyCostLevel = getMonthlyDailyCostLevel(dailyCost, subscription.getMonthlyAmount());
         boolean checkedInToday = isCheckedInToday(subscription.getId());
         String emoji = EmojiMapper.toEmoji(subscription.getEmojiCode());
 
@@ -193,7 +226,7 @@ public class SubscriptionService {
                 subscription.getMonthlyAmount(),
                 subscription.getStartDate(),
                 subscription.getEndDate(),
-                usageCount,
+                monthlyUsageCount,  // 이번 달 사용 횟수
                 dailyCost,
                 dailyCostLevel,
                 checkedInToday

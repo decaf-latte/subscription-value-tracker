@@ -133,26 +133,24 @@
             container.classList.toggle('hidden');
         }
 
-        // 이모지 피커 이벤트 설정
-        document.addEventListener('DOMContentLoaded', function() {
-            var picker = document.getElementById('emoji-picker');
-            if (picker) {
-                picker.addEventListener('emoji-click', function(e) {
-                    var emoji = e.detail.unicode;
-                    document.getElementById('emojiPreview').textContent = emoji;
-                    document.getElementById('emojiCode').value = emoji;
-                    document.getElementById('emoji-picker-container').classList.add('hidden');
-                });
+        // 이모지 피커 이벤트 설정 (이벤트 위임 사용)
+        document.addEventListener('emoji-click', function(e) {
+            if (e.target && e.target.id === 'emoji-picker') {
+                var emoji = e.detail.unicode;
+                document.getElementById('emojiPreview').textContent = emoji;
+                document.getElementById('emojiCode').value = emoji;
+                document.getElementById('emoji-picker-container').classList.add('hidden');
+                console.log('Emoji selected:', emoji);
             }
+        });
 
-            // 피커 외부 클릭 시 닫기
-            document.addEventListener('click', function(e) {
-                var container = document.getElementById('emoji-picker-container');
-                var btn = document.getElementById('emoji-btn');
-                if (container && !container.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
-                    container.classList.add('hidden');
-                }
-            });
+        // 피커 외부 클릭 시 닫기
+        document.addEventListener('click', function(e) {
+            var container = document.getElementById('emoji-picker-container');
+            var btn = document.getElementById('emoji-btn');
+            if (container && !container.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
+                container.classList.add('hidden');
+            }
         });
 
         // 기간 유형 업데이트 (숫자 + 단위 → periodType)

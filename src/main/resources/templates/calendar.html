@@ -6,6 +6,14 @@
 </head>
 <body>
 <section>
+    <!-- 알림 메시지 -->
+    <div th:if="${message}" class="mb-4 p-4 bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 rounded-xl">
+        <span th:text="${message}"></span>
+    </div>
+    <div th:if="${error}" class="mb-4 p-4 bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-300 rounded-xl">
+        <span th:text="${error}"></span>
+    </div>
+
     <!-- 요약 카드 섹션 -->
     <div class="mb-6">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
@@ -29,6 +37,55 @@
                 <p class="text-xl md:text-2xl font-bold">
                     <span th:text="${activeSubscriptionCount}">0</span>
                     <span class="text-sm md:text-base text-gray-500">개</span>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 구독별 본전 진행률 -->
+    <div class="mb-6" th:if="${not #lists.isEmpty(progressList)}">
+        <h3 class="text-base md:text-lg font-semibold mb-3 md:mb-4">본전 진행률</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+            <div th:each="progress : ${progressList}"
+                 class="bg-light-card dark:bg-dark-card rounded-2xl p-4 border border-light-border dark:border-dark-border">
+                <!-- 헤더: 이모지 + 이름 + 상태 -->
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xl" th:text="${progress.emoji}">📌</span>
+                        <span class="font-semibold" th:text="${progress.name}">구독명</span>
+                        <span class="text-xs text-gray-500" th:text="'(' + ${progress.elapsedMonths} + '/' + ${progress.totalMonths} + '개월)'"></span>
+                    </div>
+                    <span th:class="${progress.status == 'good'} ? 'text-xs px-2 py-1 rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400' : (${progress.status == 'warning'} ? 'text-xs px-2 py-1 rounded-full bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400' : 'text-xs px-2 py-1 rounded-full bg-yellow-100 dark:bg-yellow-500/20 text-yellow-600 dark:text-yellow-400')"
+                          th:text="${progress.statusMessage}">상태</span>
+                </div>
+
+                <!-- 기간 진행률 바 -->
+                <div class="mb-2">
+                    <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
+                        <span>기간</span>
+                        <span th:text="${progress.periodProgress} + '%'">0%</span>
+                    </div>
+                    <div class="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                        <div class="h-full bg-gray-400 dark:bg-gray-500 rounded-full transition-all duration-300"
+                             th:style="'width: ' + ${progress.periodProgress} + '%'"></div>
+                    </div>
+                </div>
+
+                <!-- 사용 진행률 바 -->
+                <div class="mb-2">
+                    <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
+                        <span>사용</span>
+                        <span th:text="${progress.currentTotalUsage} + '/' + ${progress.targetTotalUsage} + '회 (' + ${progress.usageProgress} + '%)'">0/0회 (0%)</span>
+                    </div>
+                    <div class="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                        <div th:class="${progress.status == 'good'} ? 'h-full bg-emerald-500 rounded-full transition-all duration-300' : (${progress.status == 'warning'} ? 'h-full bg-red-500 rounded-full transition-all duration-300' : 'h-full bg-yellow-500 rounded-full transition-all duration-300')"
+                             th:style="'width: ' + ${progress.usageProgress} + '%'"></div>
+                    </div>
+                </div>
+
+                <!-- 목표 정보 -->
+                <p class="text-xs text-gray-400 dark:text-gray-500">
+                    월 목표: <span th:text="${progress.monthlyTarget}">0</span>회
                 </p>
             </div>
         </div>
@@ -141,6 +198,11 @@
             var monthDay = (dateObj.getMonth() + 1) + '월 ' + dateObj.getDate() + '일';
             dateDisplay.textContent = monthDay;
 
+            // 해당 날짜의 출석 정보 가져오기
+            var dateCell = document.querySelector('[data-date="' + date + '"]');
+            var checkedIdsStr = dateCell ? dateCell.dataset.checkedIds : '';
+            var checkedIds = checkedIdsStr ? checkedIdsStr.split(',').map(function(id) { return parseInt(id, 10); }) : [];
+
             // 구독 목록 생성
             listContainer.innerHTML = '';
 
@@ -154,6 +216,7 @@
                 var returnUrl = '/calendar' + (currentYear && currentMonth ? '?year=' + currentYear + '&month=' + currentMonth : '');
 
                 subscriptionData.forEach(function(sub) {
+                    var isChecked = checkedIds.indexOf(sub.id) !== -1;
                     var item = document.createElement('form');
                     item.method = 'post';
                     item.action = '/subscriptions/' + sub.id + '/check-in';
@@ -161,18 +224,36 @@
                     var amount = sub.monthlyAmount || 0;
                     var amountFormatted = amount.toLocaleString();
 
-                    item.innerHTML =
-                        '<input type="hidden" name="date" value="' + date + '">' +
-                        '<input type="hidden" name="returnUrl" value="' + returnUrl + '">' +
-                        '<button type="submit" ' +
-                        'class="w-full flex items-center gap-3 p-3 bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 rounded-xl transition text-left">' +
-                        '<span class="text-xl md:text-2xl">' + (sub.emoji || '📌') + '</span>' +
-                        '<div class="flex-1 min-w-0">' +
-                        '<p class="font-medium text-sm md:text-base truncate">' + (sub.name || '') + '</p>' +
-                        '<p class="text-xs text-gray-500 dark:text-gray-400">월 ₩' + amountFormatted + '</p>' +
-                        '</div>' +
-                        '<span class="text-emerald-500 dark:text-emerald-400">+</span>' +
-                        '</button>';
+                    if (isChecked) {
+                        // 이미 출석한 구독 - 취소 가능
+                        item.innerHTML =
+                            '<input type="hidden" name="date" value="' + date + '">' +
+                            '<input type="hidden" name="returnUrl" value="' + returnUrl + '">' +
+                            '<button type="submit" ' +
+                            'class="w-full flex items-center gap-3 p-3 bg-emerald-100 dark:bg-emerald-500/20 hover:bg-red-100 dark:hover:bg-red-500/20 rounded-xl transition text-left group">' +
+                            '<span class="text-xl md:text-2xl">' + (sub.emoji || '📌') + '</span>' +
+                            '<div class="flex-1 min-w-0">' +
+                            '<p class="font-medium text-sm md:text-base truncate text-emerald-700 dark:text-emerald-300">' + (sub.name || '') + '</p>' +
+                            '<p class="text-xs text-emerald-600 dark:text-emerald-400">✓ 출석 완료</p>' +
+                            '</div>' +
+                            '<span class="text-emerald-500 dark:text-emerald-400 group-hover:hidden">✓</span>' +
+                            '<span class="text-red-500 dark:text-red-400 hidden group-hover:inline">✕</span>' +
+                            '</button>';
+                    } else {
+                        // 아직 출석 안 한 구독
+                        item.innerHTML =
+                            '<input type="hidden" name="date" value="' + date + '">' +
+                            '<input type="hidden" name="returnUrl" value="' + returnUrl + '">' +
+                            '<button type="submit" ' +
+                            'class="w-full flex items-center gap-3 p-3 bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 rounded-xl transition text-left">' +
+                            '<span class="text-xl md:text-2xl">' + (sub.emoji || '📌') + '</span>' +
+                            '<div class="flex-1 min-w-0">' +
+                            '<p class="font-medium text-sm md:text-base truncate">' + (sub.name || '') + '</p>' +
+                            '<p class="text-xs text-gray-500 dark:text-gray-400">월 ₩' + amountFormatted + '</p>' +
+                            '</div>' +
+                            '<span class="text-emerald-500 dark:text-emerald-400">+</span>' +
+                            '</button>';
+                    }
 
                     listContainer.appendChild(item);
                 });

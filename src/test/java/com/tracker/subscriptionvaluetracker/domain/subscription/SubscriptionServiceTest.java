@@ -103,7 +103,7 @@ class SubscriptionServiceTest {
             Subscription sub1 = createTestSubscription("넷플릭스", "17000");
             Subscription sub2 = createTestSubscription("헬스장", "30000");
 
-            given(subscriptionRepository.findByUserUuidAndIsActiveTrueOrderByCreatedAtDesc(TEST_USER_UUID))
+            given(subscriptionRepository.findCurrentSubscriptions(eq(TEST_USER_UUID), any(LocalDate.class)))
                     .willReturn(List.of(sub1, sub2));
 
             // when
@@ -307,46 +307,46 @@ class SubscriptionServiceTest {
     }
 
     @Nested
-    @DisplayName("회당 비용 계산")
-    class DailyCostCalculation {
+    @DisplayName("월별 회당 비용 계산")
+    class MonthlyDailyCostCalculation {
 
         @Test
-        @DisplayName("사용 횟수가 0이면 월 금액 전체가 회당 비용이다")
-        void calculateDailyCost_ZeroUsage() {
+        @DisplayName("이번 달 사용 횟수가 0이면 월 금액 전체가 회당 비용이다")
+        void calculateMonthlyDailyCost_ZeroUsage() {
             // given
             Subscription subscription = createTestSubscription("넷플릭스", "17000");
             setSubscriptionId(subscription, 1L);
 
-            given(usageLogRepository.countBySubscriptionId(1L)).willReturn(0L);
+            given(usageLogRepository.countBySubscriptionIdAndUsedAtBetween(eq(1L), any(), any())).willReturn(0L);
 
             // when
-            BigDecimal result = subscriptionService.calculateDailyCost(subscription);
+            BigDecimal result = subscriptionService.calculateMonthlyDailyCost(subscription);
 
             // then
             assertThat(result).isEqualTo(new BigDecimal("17000"));
         }
 
         @Test
-        @DisplayName("총 금액을 사용 횟수로 나눈 회당 비용을 계산한다")
-        void calculateDailyCost_WithUsage() {
+        @DisplayName("월 금액을 이번 달 사용 횟수로 나눈 회당 비용을 계산한다")
+        void calculateMonthlyDailyCost_WithUsage() {
             // given
-            // 1개월 구독, 총 금액 30000원, 총 10회 사용
+            // 1개월 구독, 월 금액 30000원, 이번 달 10회 사용
             Subscription subscription = createTestSubscription("헬스장", "30000");
             setSubscriptionId(subscription, 1L);
 
-            given(usageLogRepository.countBySubscriptionId(1L)).willReturn(10L);
+            given(usageLogRepository.countBySubscriptionIdAndUsedAtBetween(eq(1L), any(), any())).willReturn(10L);
 
             // when
-            BigDecimal result = subscriptionService.calculateDailyCost(subscription);
+            BigDecimal result = subscriptionService.calculateMonthlyDailyCost(subscription);
 
             // then
-            // 총 금액 30000원 / 10회 = 3000원
+            // 월 금액 30000원 / 10회 = 3000원
             assertThat(result).isEqualTo(new BigDecimal("3000"));
         }
 
         @Test
-        @DisplayName("총 금액을 기준으로 회당 비용을 계산한다 (3개월 구독)")
-        void calculateDailyCost_MultipleMonths() {
+        @DisplayName("월 금액 기준으로 회당 비용을 계산한다 (3개월 구독)")
+        void calculateMonthlyDailyCost_MultipleMonths() {
             // given
             // 3개월 구독 (총 90000원, 월 30000원)
             Subscription subscription = new Subscription(
@@ -356,54 +356,54 @@ class SubscriptionServiceTest {
             );
             setSubscriptionId(subscription, 1L);
 
-            // 총 15회 사용
-            given(usageLogRepository.countBySubscriptionId(1L)).willReturn(15L);
+            // 이번 달 15회 사용
+            given(usageLogRepository.countBySubscriptionIdAndUsedAtBetween(eq(1L), any(), any())).willReturn(15L);
 
             // when
-            BigDecimal result = subscriptionService.calculateDailyCost(subscription);
+            BigDecimal result = subscriptionService.calculateMonthlyDailyCost(subscription);
 
             // then
-            // 총 금액 90000원 / 15회 = 6000원
-            assertThat(result).isEqualTo(new BigDecimal("6000"));
+            // 월 금액 30000원 / 15회 = 2000원
+            assertThat(result).isEqualTo(new BigDecimal("2000"));
         }
 
         @Test
-        @DisplayName("일일 비용 레벨이 good으로 계산된다 (월 금액의 1/20 이하)")
-        void getDailyCostLevel_Good() {
+        @DisplayName("월별 비용 레벨이 good으로 계산된다 (월 금액의 1/20 이하)")
+        void getMonthlyDailyCostLevel_Good() {
             // given
             BigDecimal monthlyAmount = new BigDecimal("20000");
             BigDecimal dailyCost = new BigDecimal("1000"); // 1/20
 
             // when
-            String result = subscriptionService.getDailyCostLevel(dailyCost, monthlyAmount);
+            String result = subscriptionService.getMonthlyDailyCostLevel(dailyCost, monthlyAmount);
 
             // then
             assertThat(result).isEqualTo("good");
         }
 
         @Test
-        @DisplayName("일일 비용 레벨이 normal로 계산된다 (월 금액의 1/20 초과, 1/10 이하)")
-        void getDailyCostLevel_Normal() {
+        @DisplayName("월별 비용 레벨이 normal로 계산된다 (월 금액의 1/20 초과, 1/10 이하)")
+        void getMonthlyDailyCostLevel_Normal() {
             // given
             BigDecimal monthlyAmount = new BigDecimal("20000");
             BigDecimal dailyCost = new BigDecimal("1500"); // 1/20 초과, 1/10 이하
 
             // when
-            String result = subscriptionService.getDailyCostLevel(dailyCost, monthlyAmount);
+            String result = subscriptionService.getMonthlyDailyCostLevel(dailyCost, monthlyAmount);
 
             // then
             assertThat(result).isEqualTo("normal");
         }
 
         @Test
-        @DisplayName("일일 비용 레벨이 warning으로 계산된다 (월 금액의 1/10 초과)")
-        void getDailyCostLevel_Warning() {
+        @DisplayName("월별 비용 레벨이 warning으로 계산된다 (월 금액의 1/10 초과)")
+        void getMonthlyDailyCostLevel_Warning() {
             // given
             BigDecimal monthlyAmount = new BigDecimal("20000");
             BigDecimal dailyCost = new BigDecimal("5000"); // 1/10 초과
 
             // when
-            String result = subscriptionService.getDailyCostLevel(dailyCost, monthlyAmount);
+            String result = subscriptionService.getMonthlyDailyCostLevel(dailyCost, monthlyAmount);
 
             // then
             assertThat(result).isEqualTo("warning");

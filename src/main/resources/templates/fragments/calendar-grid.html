@@ -57,7 +57,7 @@
         <!-- 캘린더 그리드 -->
         <div class="grid grid-cols-7 gap-0.5 md:gap-1">
             <div th:each="day : ${calendarDays}"
-                 th:attr="data-date=${day.currentMonth ? day.date : ''}"
+                 th:attr="data-date=${day.currentMonth ? day.date : ''},data-checked-ids=${day.currentMonth and day.hasUsages() ? #strings.listJoin(day.usages.![subscriptionId], ',') : ''}"
                  th:classappend="${day.currentMonth ? 'clickable-date' : ''}"
                  th:class="${not day.currentMonth} ? 'calendar-cell p-1 md:p-2 text-gray-400 dark:text-gray-600 rounded-lg' : 'calendar-cell p-1 md:p-2 cursor-pointer transition ' + (${day.today} ? 'bg-emerald-50 dark:bg-white/10 ring-2 ring-emerald-500 rounded-xl' : 'rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 border border-transparent hover:border-gray-200 dark:hover:border-gray-700')">
 

@@ -33,7 +33,7 @@ public class StatisticsService {
     }
 
     /**
-     * 최근 6개월 월별 사용 횟수
+     * 최근 6개월 월별 사용 횟수 (전체 합계)
      */
     public Map<String, Object> getMonthlyUsageStats(String userUuid) {
         List<String> labels = new ArrayList<>();
@@ -70,11 +70,57 @@ public class StatisticsService {
     }
 
     /**
-     * 구독별 월 비용 비교
+     * 최근 6개월 구독별 월별 사용 횟수
      */
-    public Map<String, Object> getSubscriptionCostComparison(String userUuid) {
+    public Map<String, Object> getMonthlyUsageBySubscription(String userUuid) {
+        List<String> labels = new ArrayList<>();
+        List<Map<String, Object>> datasets = new ArrayList<>();
+
+        YearMonth currentMonth = YearMonth.now();
+
+        // 월 라벨 생성 (최근 6개월)
+        for (int i = 5; i >= 0; i--) {
+            YearMonth month = currentMonth.minusMonths(i);
+            labels.add(month.getMonthValue() + "월");
+        }
+
+        // 구독 목록
         List<Subscription> subscriptions = subscriptionRepository
                 .findByUserUuidAndIsActiveTrueOrderByCreatedAtDesc(userUuid);
+
+        // 각 구독별 데이터셋 생성
+        for (Subscription sub : subscriptions) {
+            List<Long> monthlyData = new ArrayList<>();
+
+            for (int i = 5; i >= 0; i--) {
+                YearMonth month = currentMonth.minusMonths(i);
+                LocalDate startOfMonth = month.atDay(1);
+                LocalDate endOfMonth = month.atEndOfMonth();
+
+                long count = usageLogRepository.countBySubscriptionIdAndUsedAtBetween(
+                        sub.getId(), startOfMonth, endOfMonth);
+                monthlyData.add(count);
+            }
+
+            Map<String, Object> dataset = new HashMap<>();
+            dataset.put("label", sub.getName());
+            dataset.put("data", monthlyData);
+            datasets.add(dataset);
+        }
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("labels", labels);
+        result.put("datasets", datasets);
+        return result;
+    }
+
+    /**
+     * 구독별 월 비용 비교 (현재 구독중인 것만)
+     */
+    public Map<String, Object> getSubscriptionCostComparison(String userUuid) {
+        LocalDate today = LocalDate.now();
+        List<Subscription> subscriptions = subscriptionRepository
+                .findCurrentSubscriptions(userUuid, today);
 
         List<String> labels = new ArrayList<>();
         List<BigDecimal> data = new ArrayList<>();
@@ -135,10 +181,12 @@ public class StatisticsService {
     public Map<String, Object> getSummaryStats(String userUuid) {
         Map<String, Object> result = new HashMap<>();
 
-        // 구독 통계
-        long subscriptionCount = subscriptionRepository.countByUserUuidAndIsActiveTrue(userUuid);
+        LocalDate today = LocalDate.now();
+
+        // 구독 통계 (종료일이 지나지 않은 현재 구독만 포함)
+        long subscriptionCount = subscriptionRepository.countCurrentSubscriptions(userUuid, today);
         BigDecimal totalMonthlyFee = subscriptionRepository
-                .findByUserUuidAndIsActiveTrueOrderByCreatedAtDesc(userUuid)
+                .findCurrentSubscriptions(userUuid, today)
                 .stream()
                 .map(Subscription::getMonthlyAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);

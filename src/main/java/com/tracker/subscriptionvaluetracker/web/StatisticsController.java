@@ -38,6 +38,13 @@ public class StatisticsController {
         return statisticsService.getMonthlyUsageStats(userUuid);
     }
 
+    @GetMapping("/api/monthly-usage-by-subscription")
+    @ResponseBody
+    public Map<String, Object> getMonthlyUsageBySubscription(HttpServletRequest request, HttpServletResponse response) {
+        String userUuid = UserIdentifier.getUserUuid(request, response);
+        return statisticsService.getMonthlyUsageBySubscription(userUuid);
+    }
+
     @GetMapping("/api/cost-comparison")
     @ResponseBody
     public Map<String, Object> getCostComparison(HttpServletRequest request, HttpServletResponse response) {

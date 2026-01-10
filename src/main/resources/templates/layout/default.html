@@ -66,10 +66,12 @@
                    class="px-3 py-1.5 text-sm bg-light-card dark:bg-dark-card rounded-lg border border-light-border dark:border-dark-border hover:border-gray-400 dark:hover:border-gray-600 transition">
                     📊 통계
                 </a>
+                <!-- 투자 기능 숨김
                 <a th:href="@{/investments}"
                    class="px-3 py-1.5 text-sm bg-light-card dark:bg-dark-card rounded-lg border border-light-border dark:border-dark-border hover:border-gray-400 dark:hover:border-gray-600 transition">
                     📦 투자
                 </a>
+                -->
                 <button onclick="openSubscriptionModal()"
                    class="px-3 py-1.5 text-sm bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition">
                     + 구독 추가
@@ -106,10 +108,12 @@
                    class="px-3 py-2 text-sm bg-light-card dark:bg-dark-card rounded-lg border border-light-border dark:border-dark-border">
                     📊 통계
                 </a>
+                <!-- 투자 기능 숨김
                 <a th:href="@{/investments}"
                    class="px-3 py-2 text-sm bg-light-card dark:bg-dark-card rounded-lg border border-light-border dark:border-dark-border">
                     📦 투자
                 </a>
+                -->
                 <button onclick="openSubscriptionModal(); toggleMobileMenu();"
                    class="px-3 py-2 text-sm bg-emerald-500 text-white rounded-lg text-center w-full">
                     + 구독 추가
@@ -130,12 +134,12 @@
         </div>
     </footer>
 
-    <!-- 구독 추가 모달 -->
+    <!-- 구독 추가/수정 모달 -->
     <div id="subscription-modal" class="fixed inset-0 bg-black/70 hidden items-center justify-center z-50 p-4">
         <div class="bg-light-card dark:bg-dark-card rounded-2xl border border-light-border dark:border-dark-border w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <div class="p-4 md:p-6">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg md:text-xl font-bold">새 구독 추가</h3>
+                    <h3 id="modal-title" class="text-lg md:text-xl font-bold">새 구독 추가</h3>
                     <button onclick="closeSubscriptionModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-white transition">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -143,7 +147,8 @@
                     </button>
                 </div>
 
-                <form id="subscription-form" action="/subscriptions" method="post" class="space-y-4">
+                <form id="subscription-form" action="/subscriptions" method="post" accept-charset="UTF-8" class="space-y-4">
+                    <input type="hidden" id="modal-subscriptionId" name="subscriptionId" value="">
                     <!-- 이름 -->
                     <div>
                         <label for="modal-name" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">서비스 이름</label>
@@ -236,13 +241,28 @@
                         </div>
                     </div>
 
+                    <!-- 월 목표 횟수 -->
+                    <div>
+                        <label for="modal-monthlyTargetUsage" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
+                            월 목표 횟수 <span class="text-gray-400 text-xs">(선택)</span>
+                        </label>
+                        <div class="relative">
+                            <input type="number" id="modal-monthlyTargetUsage" name="monthlyTargetUsage"
+                                   placeholder="미입력시 자동계산"
+                                   min="1"
+                                   class="w-full px-4 py-3 bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-emerald-500 transition">
+                            <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">회/월</span>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-1">미입력시 월구독료 ÷ 3,000원으로 자동계산</p>
+                    </div>
+
                     <!-- 버튼 -->
                     <div class="flex gap-3 pt-2">
                         <button type="button" onclick="closeSubscriptionModal()"
                                 class="flex-1 py-3 text-center bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 transition">
                             취소
                         </button>
-                        <button type="submit"
+                        <button type="submit" id="modal-submit-btn"
                                 class="flex-1 py-3 bg-emerald-500 text-white rounded-xl font-medium hover:bg-emerald-600 transition">
                             등록하기
                         </button>
@@ -314,6 +334,21 @@
                 startDateInput.value = new Date().toISOString().split('T')[0];
                 calculateModalEndDate();
             }
+
+            // 폼 제출 전 이모지 값 확인 및 로깅
+            var subscriptionForm = document.getElementById('subscription-form');
+            if (subscriptionForm) {
+                subscriptionForm.addEventListener('submit', function(e) {
+                    var emojiCode = document.getElementById('modal-emojiCode').value;
+                    console.log('Form submitting with emojiCode:', emojiCode, 'length:', emojiCode.length);
+
+                    // 이모지가 비어있으면 기본값 설정
+                    if (!emojiCode || emojiCode.trim() === '') {
+                        document.getElementById('modal-emojiCode').value = '😀';
+                        console.log('Set default emoji: 😀');
+                    }
+                });
+            }
         });
 
         // ESC 키로 모달 닫기
@@ -321,19 +356,74 @@
             if (e.key === 'Escape') closeSubscriptionModal();
         });
 
-        // 구독 모달 열기
+        // 구독 모달 열기 (신규 추가)
         function openSubscriptionModal() {
             var modal = document.getElementById('subscription-modal');
             modal.classList.remove('hidden');
             modal.classList.add('flex');
             // 폼 초기화
             document.getElementById('subscription-form').reset();
+            document.getElementById('subscription-form').action = '/subscriptions';
+            document.getElementById('modal-subscriptionId').value = '';
+            document.getElementById('modal-title').textContent = '새 구독 추가';
+            document.getElementById('modal-submit-btn').textContent = '등록하기';
             document.getElementById('modal-emojiPreview').textContent = '😀';
             document.getElementById('modal-emojiCode').value = '😀';
             document.getElementById('modal-periodType').value = '1개월';
+            document.getElementById('modal-periodNumber').value = '1';
+            document.getElementById('modal-periodUnit').value = '개월';
+            document.getElementById('modal-monthlyTargetUsage').value = '';
             // 시작일 기본값
             document.getElementById('modal-startDate').value = new Date().toISOString().split('T')[0];
             calculateModalEndDate();
+            // 이모지 피커 닫기
+            document.getElementById('modal-emoji-picker-container').classList.add('hidden');
+        }
+
+        // 구독 모달 열기 (수정)
+        function openEditSubscriptionModal(subscriptionId) {
+            var modal = document.getElementById('subscription-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            // 모달 타이틀 및 버튼 텍스트 변경
+            document.getElementById('modal-title').textContent = '구독 수정';
+            document.getElementById('modal-submit-btn').textContent = '수정하기';
+            document.getElementById('subscription-form').action = '/subscriptions/' + subscriptionId;
+            document.getElementById('modal-subscriptionId').value = subscriptionId;
+
+            // 구독 데이터 가져오기
+            fetch('/subscriptions/' + subscriptionId + '/json')
+                .then(function(response) { return response.json(); })
+                .then(function(data) {
+                    document.getElementById('modal-name').value = data.name;
+                    document.getElementById('modal-emojiPreview').textContent = data.emojiCode;
+                    document.getElementById('modal-emojiCode').value = data.emojiCode;
+                    document.getElementById('modal-totalAmount').value = data.totalAmount;
+                    document.getElementById('modal-monthlyAmount').value = data.monthlyAmount;
+                    document.getElementById('modal-startDate').value = data.startDate;
+                    if (data.endDate) {
+                        document.getElementById('modal-endDate').value = data.endDate;
+                    }
+                    // periodType 파싱 (예: "3개월" -> number: 3, unit: "개월")
+                    var periodMatch = data.periodType.match(/^(\d+)(.+)$/);
+                    if (periodMatch) {
+                        document.getElementById('modal-periodNumber').value = periodMatch[1];
+                        document.getElementById('modal-periodUnit').value = periodMatch[2];
+                        document.getElementById('modal-periodType').value = data.periodType;
+                    }
+                    // 월 목표 횟수
+                    if (data.monthlyTargetUsage) {
+                        document.getElementById('modal-monthlyTargetUsage').value = data.monthlyTargetUsage;
+                    } else {
+                        document.getElementById('modal-monthlyTargetUsage').value = '';
+                    }
+                })
+                .catch(function(error) {
+                    console.error('구독 정보를 가져오는데 실패했습니다:', error);
+                    closeSubscriptionModal();
+                });
+
             // 이모지 피커 닫기
             document.getElementById('modal-emoji-picker-container').classList.add('hidden');
         }
@@ -353,26 +443,25 @@
             container.classList.toggle('hidden');
         }
 
-        // 모달 이모지 피커 이벤트 설정
-        document.addEventListener('DOMContentLoaded', function() {
-            var picker = document.getElementById('modal-emoji-picker');
-            if (picker) {
-                picker.addEventListener('emoji-click', function(e) {
-                    var emoji = e.detail.unicode;
-                    document.getElementById('modal-emojiPreview').textContent = emoji;
-                    document.getElementById('modal-emojiCode').value = emoji;
-                    document.getElementById('modal-emoji-picker-container').classList.add('hidden');
-                });
+        // 모달 이모지 피커 이벤트 설정 (이벤트 위임 사용 - 커스텀 엘리먼트 로딩 타이밍 문제 방지)
+        document.addEventListener('emoji-click', function(e) {
+            // modal-emoji-picker에서 발생한 이벤트인지 확인
+            if (e.target && e.target.id === 'modal-emoji-picker') {
+                var emoji = e.detail.unicode;
+                document.getElementById('modal-emojiPreview').textContent = emoji;
+                document.getElementById('modal-emojiCode').value = emoji;
+                document.getElementById('modal-emoji-picker-container').classList.add('hidden');
+                console.log('Emoji selected:', emoji); // 디버깅용
             }
+        });
 
-            // 피커 외부 클릭 시 닫기
-            document.addEventListener('click', function(e) {
-                var container = document.getElementById('modal-emoji-picker-container');
-                var btn = document.getElementById('modal-emoji-btn');
-                if (container && btn && !container.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
-                    container.classList.add('hidden');
-                }
-            });
+        // 피커 외부 클릭 시 닫기
+        document.addEventListener('click', function(e) {
+            var container = document.getElementById('modal-emoji-picker-container');
+            var btn = document.getElementById('modal-emoji-btn');
+            if (container && btn && !container.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
+                container.classList.add('hidden');
+            }
         });
 
         // 모달 기간 유형 업데이트

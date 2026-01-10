@@ -3,6 +3,7 @@ package com.tracker.subscriptionvaluetracker.web;
 import com.tracker.subscriptionvaluetracker.common.UserIdentifier;
 import com.tracker.subscriptionvaluetracker.domain.subscription.CalendarDayDto;
 import com.tracker.subscriptionvaluetracker.domain.subscription.CalendarService;
+import com.tracker.subscriptionvaluetracker.domain.subscription.SubscriptionProgressDto;
 import com.tracker.subscriptionvaluetracker.domain.subscription.SubscriptionService;
 import com.tracker.subscriptionvaluetracker.domain.subscription.SubscriptionViewDto;
 import jakarta.servlet.http.HttpServletRequest;
@@ -76,12 +77,16 @@ public class CalendarController {
 
         long activeSubscriptionCount = subscriptions.size();
 
+        // 구독별 진행률 계산
+        List<SubscriptionProgressDto> progressList = calendarService.getSubscriptionProgress(userUuid);
+
         // 이전/다음 월 계산
         YearMonth prevMonth = targetYearMonth.minusMonths(1);
         YearMonth nextMonth = targetYearMonth.plusMonths(1);
 
         model.addAttribute("calendarDays", calendarDays);
         model.addAttribute("subscriptions", subscriptions);
+        model.addAttribute("progressList", progressList);
         model.addAttribute("totalMonthlyFee", totalMonthlyFee);
         model.addAttribute("totalUsageCount", totalUsageCount);
         model.addAttribute("avgDailyCost", avgDailyCost);

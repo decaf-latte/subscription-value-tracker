@@ -66,6 +66,34 @@ class EmojiMapperTest {
             // then
             assertThat(result).isEqualTo("📌");
         }
+
+        @ParameterizedTest
+        @DisplayName("직접 이모지 값이 전달되면 그대로 반환한다")
+        @CsvSource({
+                "😀, 😀",
+                "🎉, 🎉",
+                "❤️, ❤️",
+                "🏋️, 🏋️",
+                "🎬, 🎬",
+                "🚀, 🚀"
+        })
+        void toEmoji_DirectEmoji(String emoji, String expected) {
+            // when
+            String result = EmojiMapper.toEmoji(emoji);
+
+            // then
+            assertThat(result).isEqualTo(expected);
+        }
+
+        @Test
+        @DisplayName("이모지와 텍스트가 섞인 경우 그대로 반환한다")
+        void toEmoji_MixedContent() {
+            // when
+            String result = EmojiMapper.toEmoji("테스트😀");
+
+            // then - 알파벳과 언더스코어만으로 이루어지지 않았으므로 그대로 반환
+            assertThat(result).isEqualTo("테스트😀");
+        }
     }
 
     @Nested

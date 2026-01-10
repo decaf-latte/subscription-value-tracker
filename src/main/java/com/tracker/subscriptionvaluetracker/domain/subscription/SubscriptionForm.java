@@ -12,6 +12,7 @@ public class SubscriptionForm {
     private BigDecimal monthlyAmount;
     private LocalDate startDate;
     private LocalDate endDate;
+    private Integer monthlyTargetUsage;
 
     public SubscriptionForm() {
     }
@@ -85,9 +86,17 @@ public class SubscriptionForm {
         this.endDate = endDate;
     }
 
+    public Integer getMonthlyTargetUsage() {
+        return monthlyTargetUsage;
+    }
+
+    public void setMonthlyTargetUsage(Integer monthlyTargetUsage) {
+        this.monthlyTargetUsage = monthlyTargetUsage;
+    }
+
     // Convert from entity
     public static SubscriptionForm from(Subscription subscription) {
-        return new SubscriptionForm(
+        SubscriptionForm form = new SubscriptionForm(
                 subscription.getName(),
                 subscription.getEmojiCode(),
                 subscription.getPeriodType(),
@@ -96,5 +105,7 @@ public class SubscriptionForm {
                 subscription.getStartDate(),
                 subscription.getEndDate()
         );
+        form.setMonthlyTargetUsage(subscription.getMonthlyTargetUsage());
+        return form;
     }
 }

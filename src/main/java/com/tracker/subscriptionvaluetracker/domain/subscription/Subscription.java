@@ -38,6 +38,9 @@ public class Subscription {
 
     private LocalDate endDate;
 
+    // 월 목표 사용 횟수 (null이면 자동계산: 월구독료 ÷ 3000)
+    private Integer monthlyTargetUsage;
+
     @Column(nullable = false)
     private Boolean isActive = true;
 
@@ -110,6 +113,10 @@ public class Subscription {
         return endDate;
     }
 
+    public Integer getMonthlyTargetUsage() {
+        return monthlyTargetUsage;
+    }
+
     public Boolean getIsActive() {
         return isActive;
     }
@@ -151,7 +158,23 @@ public class Subscription {
         this.endDate = endDate;
     }
 
+    public void setMonthlyTargetUsage(Integer monthlyTargetUsage) {
+        this.monthlyTargetUsage = monthlyTargetUsage;
+    }
+
     public void setIsActive(Boolean isActive) {
         this.isActive = isActive;
+    }
+
+    /**
+     * 월 목표 사용 횟수 계산 (설정값 또는 자동계산)
+     */
+    public int getCalculatedMonthlyTarget() {
+        if (monthlyTargetUsage != null && monthlyTargetUsage > 0) {
+            return monthlyTargetUsage;
+        }
+        // 자동계산: 월구독료 ÷ 3000 (최소 1회)
+        int calculated = monthlyAmount.divide(java.math.BigDecimal.valueOf(3000), 0, java.math.RoundingMode.HALF_UP).intValue();
+        return Math.max(calculated, 1);
     }
 }

@@ -108,7 +108,7 @@ class StatisticsServiceTest {
             // given
             Subscription sub1 = createSubscription(1L, "헬스장", new BigDecimal("50000"));
             Subscription sub2 = createSubscription(2L, "넷플릭스", new BigDecimal("15000"));
-            when(subscriptionRepository.findByUserUuidAndIsActiveTrueOrderByCreatedAtDesc(USER_UUID))
+            when(subscriptionRepository.findCurrentSubscriptions(eq(USER_UUID), any(LocalDate.class)))
                     .thenReturn(Arrays.asList(sub1, sub2));
 
             // when
@@ -178,8 +178,8 @@ class StatisticsServiceTest {
             Subscription sub1 = createSubscription(1L, "헬스장", new BigDecimal("50000"));
             Subscription sub2 = createSubscription(2L, "넷플릭스", new BigDecimal("15000"));
 
-            when(subscriptionRepository.countByUserUuidAndIsActiveTrue(USER_UUID)).thenReturn(2L);
-            when(subscriptionRepository.findByUserUuidAndIsActiveTrueOrderByCreatedAtDesc(USER_UUID))
+            when(subscriptionRepository.countCurrentSubscriptions(eq(USER_UUID), any(LocalDate.class))).thenReturn(2L);
+            when(subscriptionRepository.findCurrentSubscriptions(eq(USER_UUID), any(LocalDate.class)))
                     .thenReturn(Arrays.asList(sub1, sub2));
             when(investmentRepository.countByUserUuidAndIsActiveTrue(USER_UUID)).thenReturn(1L);
 

@@ -40,9 +40,9 @@ public class CalendarService {
         // 달력 종료일 (해당 월 마지막일이 속한 주의 토요일)
         LocalDate calendarEnd = lastDayOfMonth.with(DayOfWeek.SATURDAY);
 
-        // 사용자의 활성 구독 목록
+        // 사용자의 활성 구독 목록 (종료일이 지나지 않은 현재 구독만)
         List<Subscription> subscriptions = subscriptionRepository
-                .findByUserUuidAndIsActiveTrueOrderByCreatedAtDesc(userUuid);
+                .findCurrentSubscriptions(userUuid, today);
 
         if (subscriptions.isEmpty()) {
             return buildEmptyCalendar(calendarStart, calendarEnd, yearMonth, today);
@@ -57,10 +57,12 @@ public class CalendarService {
         List<UsageLog> usageLogs = usageLogRepository.findBySubscriptionIdsAndDateRange(
                 subscriptionIds, firstDayOfMonth, lastDayOfMonth);
 
-        // 구독별 총 사용 횟수 계산 (전체 기간)
-        Map<Long, Long> totalUsageCountBySubscription = new HashMap<>();
+        // 구독별 해당 월 사용 횟수 계산 (월별 기준)
+        Map<Long, Long> monthlyUsageCountBySubscription = new HashMap<>();
         for (Long subId : subscriptionIds) {
-            totalUsageCountBySubscription.put(subId, usageLogRepository.countBySubscriptionId(subId));
+            long monthlyCount = usageLogRepository.countBySubscriptionIdAndUsedAtBetween(
+                    subId, firstDayOfMonth, lastDayOfMonth);
+            monthlyUsageCountBySubscription.put(subId, monthlyCount);
         }
 
         // 구독 ID -> 구독 정보 맵
@@ -87,9 +89,9 @@ public class CalendarService {
                 for (UsageLog usage : dayUsages) {
                     Subscription sub = subscriptionMap.get(usage.getSubscriptionId());
                     if (sub != null) {
-                        long totalUsageCount = totalUsageCountBySubscription.getOrDefault(sub.getId(), 1L);
-                        BigDecimal dailyCost = calculateCostPerUse(sub, totalUsageCount);
-                        String costLevel = getDailyCostLevel(dailyCost, sub.getTotalAmount());
+                        long monthlyUsageCount = monthlyUsageCountBySubscription.getOrDefault(sub.getId(), 1L);
+                        BigDecimal dailyCost = calculateMonthlyCostPerUse(sub, monthlyUsageCount);
+                        String costLevel = getMonthlyCostLevel(dailyCost, sub.getMonthlyAmount());
                         String emoji = EmojiMapper.toEmoji(sub.getEmojiCode());
 
                         usageEntries.add(new CalendarDayDto.UsageEntry(
@@ -137,24 +139,29 @@ public class CalendarService {
     }
 
     /**
-     * 회당 비용 계산: 총 지불 금액 / 총 사용 횟수
+     * 월별 회당 비용 계산: 월 환산 금액 / 해당 월 사용 횟수
      */
-    private BigDecimal calculateCostPerUse(Subscription subscription, long totalUsageCount) {
-        if (totalUsageCount == 0) {
+    private BigDecimal calculateMonthlyCostPerUse(Subscription subscription, long monthlyUsageCount) {
+        if (monthlyUsageCount == 0) {
             return subscription.getMonthlyAmount();
         }
 
-        // 총 지불 금액 = 구독 총 금액 (선불 기준)
-        BigDecimal totalPaid = subscription.getTotalAmount();
+        // 월 환산 금액 기준으로 회당 비용 계산
+        BigDecimal monthlyAmount = subscription.getMonthlyAmount();
 
-        // 회당 비용 = 총 지불 금액 / 총 사용 횟수
-        return totalPaid.divide(BigDecimal.valueOf(totalUsageCount), 0, RoundingMode.HALF_UP);
+        // 회당 비용 = 월 환산 금액 / 해당 월 사용 횟수
+        return monthlyAmount.divide(BigDecimal.valueOf(monthlyUsageCount), 0, RoundingMode.HALF_UP);
     }
 
-    private String getDailyCostLevel(BigDecimal dailyCost, BigDecimal totalAmount) {
-        // 총 금액 기준: 20회 이상 사용 시 good, 10~20회 normal, 10회 미만 warning
-        BigDecimal goodThreshold = totalAmount.divide(BigDecimal.valueOf(20), 0, RoundingMode.HALF_UP);
-        BigDecimal normalThreshold = totalAmount.divide(BigDecimal.valueOf(10), 0, RoundingMode.HALF_UP);
+    /**
+     * 월별 가성비 레벨 계산 (월 환산 금액 기준)
+     * - 20회 이상 사용 시 good (회당 비용 <= 월금액/20)
+     * - 10~20회 사용 시 normal (회당 비용 <= 월금액/10)
+     * - 10회 미만 사용 시 warning
+     */
+    private String getMonthlyCostLevel(BigDecimal dailyCost, BigDecimal monthlyAmount) {
+        BigDecimal goodThreshold = monthlyAmount.divide(BigDecimal.valueOf(20), 0, RoundingMode.HALF_UP);
+        BigDecimal normalThreshold = monthlyAmount.divide(BigDecimal.valueOf(10), 0, RoundingMode.HALF_UP);
 
         if (dailyCost.compareTo(goodThreshold) <= 0) {
             return "good";
@@ -166,7 +173,7 @@ public class CalendarService {
     }
 
     public List<SubscriptionViewDto> getSubscriptionsForLegend(String userUuid) {
-        return subscriptionRepository.findByUserUuidAndIsActiveTrueOrderByCreatedAtDesc(userUuid)
+        return subscriptionRepository.findCurrentSubscriptions(userUuid, LocalDate.now())
                 .stream()
                 .map(sub -> new SubscriptionViewDto(
                         sub.getId(),
@@ -181,5 +188,87 @@ public class CalendarService {
                         0, BigDecimal.ZERO, "normal", false
                 ))
                 .toList();
+    }
+
+    /**
+     * 각 구독의 진행률 정보를 계산
+     */
+    public List<SubscriptionProgressDto> getSubscriptionProgress(String userUuid) {
+        LocalDate today = LocalDate.now();
+        List<Subscription> subscriptions = subscriptionRepository.findCurrentSubscriptions(userUuid, today);
+
+        return subscriptions.stream()
+                .map(sub -> calculateProgress(sub, today))
+                .toList();
+    }
+
+    private SubscriptionProgressDto calculateProgress(Subscription subscription, LocalDate today) {
+        LocalDate startDate = subscription.getStartDate();
+        LocalDate endDate = subscription.getEndDate();
+
+        // 종료일이 없으면 시작일 + 1년으로 가정
+        if (endDate == null) {
+            endDate = startDate.plusYears(1);
+        }
+
+        // 전체 기간 (월)
+        long totalDays = java.time.temporal.ChronoUnit.DAYS.between(startDate, endDate);
+        int totalMonths = (int) Math.max(1, java.time.temporal.ChronoUnit.MONTHS.between(startDate, endDate));
+
+        // 경과 기간
+        long elapsedDays = java.time.temporal.ChronoUnit.DAYS.between(startDate, today);
+        if (elapsedDays < 0) elapsedDays = 0;
+        if (elapsedDays > totalDays) elapsedDays = totalDays;
+
+        int elapsedMonths = (int) java.time.temporal.ChronoUnit.MONTHS.between(startDate, today);
+        if (elapsedMonths < 0) elapsedMonths = 0;
+        if (elapsedMonths > totalMonths) elapsedMonths = totalMonths;
+
+        // 기간 진행률 (%)
+        int periodProgress = totalDays > 0 ? (int) (elapsedDays * 100 / totalDays) : 0;
+        if (periodProgress > 100) periodProgress = 100;
+
+        // 월 목표 사용 횟수
+        int monthlyTarget = subscription.getCalculatedMonthlyTarget();
+
+        // 목표 총 사용 횟수
+        int targetTotalUsage = monthlyTarget * totalMonths;
+
+        // 현재 총 사용 횟수
+        int currentTotalUsage = (int) usageLogRepository.countBySubscriptionId(subscription.getId());
+
+        // 사용 진행률 (%)
+        int usageProgress = targetTotalUsage > 0 ? (int) (currentTotalUsage * 100 / targetTotalUsage) : 0;
+        if (usageProgress > 100) usageProgress = 100;
+
+        // 상태 결정 (사용률이 기간 대비 낮으면 warning)
+        String status;
+        String statusMessage;
+
+        if (usageProgress >= periodProgress) {
+            status = "good";
+            statusMessage = "잘 쓰는 중";
+        } else if (usageProgress >= periodProgress - 20) {
+            status = "normal";
+            statusMessage = "조금 더 사용하면 좋아요";
+        } else {
+            status = "warning";
+            statusMessage = "더 가야 본전!";
+        }
+
+        return new SubscriptionProgressDto(
+                subscription.getId(),
+                subscription.getName(),
+                EmojiMapper.toEmoji(subscription.getEmojiCode()),
+                totalMonths,
+                elapsedMonths,
+                periodProgress,
+                targetTotalUsage,
+                currentTotalUsage,
+                usageProgress,
+                status,
+                statusMessage,
+                monthlyTarget
+        );
     }
 }

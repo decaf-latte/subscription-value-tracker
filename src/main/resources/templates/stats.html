@@ -9,7 +9,7 @@
     <!-- 요약 섹션 -->
     <div class="mb-6 md:mb-8">
         <h1 class="text-xl md:text-2xl font-bold mb-3 md:mb-4">통계</h1>
-        <div class="grid grid-cols-3 gap-2 md:gap-4">
+        <div class="grid grid-cols-2 gap-2 md:gap-4">
             <div class="bg-light-card dark:bg-dark-card rounded-2xl p-3 md:p-4 border border-light-border dark:border-dark-border">
                 <p class="text-gray-500 dark:text-gray-400 text-xs md:text-sm mb-1">활성 구독</p>
                 <p class="text-lg md:text-2xl font-bold">
@@ -21,6 +21,7 @@
                 <p class="text-gray-500 dark:text-gray-400 text-xs md:text-sm mb-1">월 총 구독료</p>
                 <p class="text-lg md:text-2xl font-bold text-emerald-500 dark:text-emerald-400" th:text="'₩' + ${#numbers.formatInteger(summary.totalMonthlyFee, 0, 'COMMA')}">₩0</p>
             </div>
+            <!-- 투자 기능 숨김
             <div class="bg-light-card dark:bg-dark-card rounded-2xl p-3 md:p-4 border border-light-border dark:border-dark-border">
                 <p class="text-gray-500 dark:text-gray-400 text-xs md:text-sm mb-1">활성 투자</p>
                 <p class="text-lg md:text-2xl font-bold">
@@ -28,14 +29,15 @@
                     <span class="text-sm md:text-base text-gray-500">개</span>
                 </p>
             </div>
+            -->
         </div>
     </div>
 
     <!-- 차트 그리드 -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-        <!-- 월별 사용 추이 -->
+        <!-- 구독별 월별 사용 추이 -->
         <div class="bg-light-card dark:bg-dark-card rounded-2xl p-4 md:p-6 border border-light-border dark:border-dark-border">
-            <h2 class="text-base md:text-lg font-semibold mb-3 md:mb-4">월별 사용 횟수</h2>
+            <h2 class="text-base md:text-lg font-semibold mb-3 md:mb-4">구독별 월별 사용 횟수</h2>
             <div class="h-48 md:h-64">
                 <canvas id="monthlyUsageChart"></canvas>
             </div>
@@ -49,13 +51,14 @@
             </div>
         </div>
 
-        <!-- 투자 절약액 추이 -->
+        <!-- 투자 기능 숨김
         <div class="bg-light-card dark:bg-dark-card rounded-2xl p-4 md:p-6 border border-light-border dark:border-dark-border lg:col-span-2">
             <h2 class="text-base md:text-lg font-semibold mb-3 md:mb-4">월별 투자 절약액</h2>
             <div class="h-48 md:h-64">
                 <canvas id="investmentSavingsChart"></canvas>
             </div>
         </div>
+        -->
     </div>
 
     <script th:inline="javascript">
@@ -102,22 +105,32 @@
                 }
             };
 
-            // 월별 사용 추이 차트
-            fetch('/stats/api/monthly-usage')
+            // 구독별 월별 사용 추이 차트
+            const chartColors = [
+                '#10B981', '#3B82F6', '#F59E0B', '#EF4444',
+                '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16'
+            ];
+
+            fetch('/stats/api/monthly-usage-by-subscription')
                 .then(response => response.json())
                 .then(data => {
+                    const datasets = data.datasets.map((dataset, index) => ({
+                        label: dataset.label,
+                        data: dataset.data,
+                        borderColor: chartColors[index % chartColors.length],
+                        backgroundColor: chartColors[index % chartColors.length] + '20',
+                        fill: false,
+                        tension: 0.4,
+                        borderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }));
+
                     const chart = new Chart(document.getElementById('monthlyUsageChart'), {
                         type: 'line',
                         data: {
                             labels: data.labels,
-                            datasets: [{
-                                label: '사용 횟수',
-                                data: data.data,
-                                borderColor: '#10B981',
-                                backgroundColor: colors.bgColor,
-                                fill: true,
-                                tension: 0.4
-                            }]
+                            datasets: datasets
                         },
                         options: chartOptions
                     });
@@ -128,10 +141,6 @@
             fetch('/stats/api/cost-comparison')
                 .then(response => response.json())
                 .then(data => {
-                    const chartColors = [
-                        '#10B981', '#3B82F6', '#F59E0B', '#EF4444',
-                        '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16'
-                    ];
                     const chart = new Chart(document.getElementById('costComparisonChart'), {
                         type: 'doughnut',
                         data: {
@@ -160,6 +169,7 @@
                     charts.push(chart);
                 });
 
+            /* 투자 기능 숨김
             // 투자 절약액 추이 차트
             fetch('/stats/api/investment-savings')
                 .then(response => response.json())
@@ -179,6 +189,7 @@
                     });
                     charts.push(chart);
                 });
+            */
 
             // 테마 변경 시 차트 색상 업데이트
             const observer = new MutationObserver(function(mutations) {

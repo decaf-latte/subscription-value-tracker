@@ -50,7 +50,7 @@ class CalendarServiceTest {
             int year = 2025;
             int month = 1;
 
-            given(subscriptionRepository.findByUserUuidAndIsActiveTrueOrderByCreatedAtDesc(TEST_USER_UUID))
+            given(subscriptionRepository.findCurrentSubscriptions(eq(TEST_USER_UUID), any(LocalDate.class)))
                     .willReturn(Collections.emptyList());
 
             // when
@@ -74,7 +74,7 @@ class CalendarServiceTest {
             int year = today.getYear();
             int month = today.getMonthValue();
 
-            given(subscriptionRepository.findByUserUuidAndIsActiveTrueOrderByCreatedAtDesc(TEST_USER_UUID))
+            given(subscriptionRepository.findCurrentSubscriptions(eq(TEST_USER_UUID), any(LocalDate.class)))
                     .willReturn(Collections.emptyList());
 
             // when
@@ -98,7 +98,7 @@ class CalendarServiceTest {
             Subscription subscription = createTestSubscription(1L, "헬스장", "30000");
             UsageLog usageLog = new UsageLog(1L, usageDate);
 
-            given(subscriptionRepository.findByUserUuidAndIsActiveTrueOrderByCreatedAtDesc(TEST_USER_UUID))
+            given(subscriptionRepository.findCurrentSubscriptions(eq(TEST_USER_UUID), any(LocalDate.class)))
                     .willReturn(List.of(subscription));
             given(usageLogRepository.findBySubscriptionIdsAndDateRange(
                     eq(List.of(1L)), any(LocalDate.class), any(LocalDate.class)))
@@ -123,7 +123,7 @@ class CalendarServiceTest {
             int year = 2025;
             int month = 1;
 
-            given(subscriptionRepository.findByUserUuidAndIsActiveTrueOrderByCreatedAtDesc(TEST_USER_UUID))
+            given(subscriptionRepository.findCurrentSubscriptions(eq(TEST_USER_UUID), any(LocalDate.class)))
                     .willReturn(Collections.emptyList());
 
             // when
@@ -147,7 +147,7 @@ class CalendarServiceTest {
             Subscription sub1 = createTestSubscription(1L, "넷플릭스", "17000");
             Subscription sub2 = createTestSubscription(2L, "헬스장", "30000");
 
-            given(subscriptionRepository.findByUserUuidAndIsActiveTrueOrderByCreatedAtDesc(TEST_USER_UUID))
+            given(subscriptionRepository.findCurrentSubscriptions(eq(TEST_USER_UUID), any(LocalDate.class)))
                     .willReturn(List.of(sub1, sub2));
 
             // when

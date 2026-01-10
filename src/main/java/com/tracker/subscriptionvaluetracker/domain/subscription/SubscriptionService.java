@@ -239,6 +239,12 @@ public class SubscriptionService {
                 .toList();
     }
 
+    public SubscriptionViewDto getSubscriptionWithStats(Long id, String userUuid) {
+        Subscription subscription = subscriptionRepository.findByIdAndUserUuid(id, userUuid)
+                .orElseThrow(() -> new IllegalArgumentException("구독을 찾을 수 없습니다."));
+        return toViewDto(subscription);
+    }
+
     public List<UsageLog> getRecentUsageLogs(Long subscriptionId) {
         return usageLogRepository.findTop10BySubscriptionIdOrderByUsedAtDesc(subscriptionId);
     }

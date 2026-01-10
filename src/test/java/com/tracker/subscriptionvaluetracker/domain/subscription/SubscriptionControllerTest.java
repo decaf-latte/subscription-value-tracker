@@ -205,7 +205,7 @@ class SubscriptionControllerTest {
                     .willReturn(true);
 
             // when
-            String result = controller.checkIn(1L, null, null, request, response, redirectAttributes);
+            String result = controller.checkIn(1L, null, null, model, request, response, redirectAttributes);
 
             // then
             assertThat(result).isEqualTo("redirect:/calendar");
@@ -222,7 +222,7 @@ class SubscriptionControllerTest {
                     .willReturn(true);
 
             // when
-            String result = controller.checkIn(1L, dateStr, null, request, response, redirectAttributes);
+            String result = controller.checkIn(1L, dateStr, null, model, request, response, redirectAttributes);
 
             // then
             assertThat(result).isEqualTo("redirect:/calendar");
@@ -237,7 +237,7 @@ class SubscriptionControllerTest {
                     .willReturn(false);
 
             // when
-            String result = controller.checkIn(1L, null, null, request, response, redirectAttributes);
+            String result = controller.checkIn(1L, null, null, model, request, response, redirectAttributes);
 
             // then
             assertThat(result).isEqualTo("redirect:/calendar");
@@ -252,7 +252,7 @@ class SubscriptionControllerTest {
                     .willReturn(true);
 
             // when
-            String result = controller.checkIn(1L, null, "/", request, response, redirectAttributes);
+            String result = controller.checkIn(1L, null, "/", model, request, response, redirectAttributes);
 
             // then
             assertThat(result).isEqualTo("redirect:/");

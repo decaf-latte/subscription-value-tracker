@@ -9,6 +9,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
@@ -143,6 +145,7 @@ public class SubscriptionController {
     public String checkIn(@PathVariable Long id,
                           @RequestParam(required = false) String date,
                           @RequestParam(required = false) String returnUrl,
+                          Model model,
                           HttpServletRequest request,
                           HttpServletResponse response,
                           RedirectAttributes redirectAttributes) {
@@ -151,6 +154,36 @@ public class SubscriptionController {
         LocalDate checkInDate = (date != null) ? LocalDate.parse(date) : LocalDate.now();
 
         boolean checkedIn = subscriptionService.toggleCheckIn(id, userUuid, checkInDate);
+
+        // HTMX 요청인지 확인
+        boolean isHtmxRequest = request.getHeader("HX-Request") != null;
+
+        if (isHtmxRequest) {
+            // 업데이트된 구독 정보 조회
+            SubscriptionViewDto updatedSub = subscriptionService.getSubscriptionWithStats(id, userUuid);
+            model.addAttribute("sub", updatedSub);
+
+            // 요약 통계도 함께 업데이트 (oob-swap용)
+            List<SubscriptionViewDto> subscriptions = subscriptionService.getSubscriptionsWithStats(userUuid);
+            BigDecimal totalMonthlyFee = subscriptions.stream()
+                    .map(SubscriptionViewDto::getMonthlyAmount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            int totalUsageCount = subscriptions.stream()
+                    .mapToInt(SubscriptionViewDto::getUsageCount)
+                    .sum();
+            BigDecimal avgDailyCost = BigDecimal.ZERO;
+            if (totalUsageCount > 0) {
+                avgDailyCost = totalMonthlyFee.divide(BigDecimal.valueOf(totalUsageCount), 0, RoundingMode.HALF_UP);
+            }
+            long activeSubscriptionCount = subscriptions.size();
+
+            model.addAttribute("totalMonthlyFee", totalMonthlyFee);
+            model.addAttribute("totalUsageCount", totalUsageCount);
+            model.addAttribute("avgDailyCost", avgDailyCost);
+            model.addAttribute("activeSubscriptionCount", activeSubscriptionCount);
+
+            return "fragments/check-in-response";
+        }
 
         if (checkedIn) {
             redirectAttributes.addFlashAttribute("message", "출석 완료!");

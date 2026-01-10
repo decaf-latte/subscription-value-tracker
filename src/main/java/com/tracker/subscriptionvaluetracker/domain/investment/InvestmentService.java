@@ -215,4 +215,33 @@ public class InvestmentService {
                 .map(this::toViewDto)
                 .toList();
     }
+
+    public InvestmentViewDto getInvestmentWithStats(Long id, String userUuid) {
+        Investment investment = investmentRepository.findByIdAndUserUuid(id, userUuid)
+                .orElseThrow(() -> new IllegalArgumentException("투자 항목을 찾을 수 없습니다."));
+        return toViewDto(investment);
+    }
+
+    public List<InvestmentUsage> getUsageLogs(Long investmentId, String userUuid) {
+        // 권한 확인
+        investmentRepository.findByIdAndUserUuid(investmentId, userUuid)
+                .orElseThrow(() -> new IllegalArgumentException("투자 항목을 찾을 수 없습니다."));
+        return getUsages(investmentId);
+    }
+
+    @Transactional
+    public void deleteUsage(Long investmentId, Long usageId, String userUuid) {
+        // 권한 확인
+        investmentRepository.findByIdAndUserUuid(investmentId, userUuid)
+                .orElseThrow(() -> new IllegalArgumentException("권한이 없습니다."));
+
+        InvestmentUsage usage = usageRepository.findById(usageId)
+                .orElseThrow(() -> new IllegalArgumentException("사용 기록을 찾을 수 없습니다."));
+
+        if (!usage.getInvestmentId().equals(investmentId)) {
+            throw new IllegalArgumentException("해당 투자 항목의 사용 기록이 아닙니다.");
+        }
+
+        usageRepository.delete(usage);
+    }
 }

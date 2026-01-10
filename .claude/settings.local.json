@@ -11,7 +11,10 @@
       "Bash(./gradlew clean:*)",
       "Bash(./gradlew test:*)",
       "Bash(./gradlew dependencies:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(lsof:*)",
+      "Bash(xargs kill:*)",
+      "Bash(curl:*)"
     ]
   }
 }

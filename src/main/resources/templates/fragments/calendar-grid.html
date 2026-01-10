@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <body>
-<div th:fragment="calendarGrid" id="calendar-grid">
+<div th:fragment="calendarGrid" id="calendar-grid" th:data-year="${year}" th:data-month="${month}">
     <!-- 캘린더 섹션 -->
     <div class="bg-light-card dark:bg-dark-card rounded-2xl border border-light-border dark:border-dark-border p-3 md:p-6">
         <!-- 캘린더 헤더 -->

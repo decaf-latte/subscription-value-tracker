@@ -89,7 +89,7 @@ public class CalendarService {
                     if (sub != null) {
                         long totalUsageCount = totalUsageCountBySubscription.getOrDefault(sub.getId(), 1L);
                         BigDecimal dailyCost = calculateCostPerUse(sub, totalUsageCount);
-                        String costLevel = getDailyCostLevel(dailyCost, sub.getMonthlyAmount());
+                        String costLevel = getDailyCostLevel(dailyCost, sub.getTotalAmount());
                         String emoji = EmojiMapper.toEmoji(sub.getEmojiCode());
 
                         usageEntries.add(new CalendarDayDto.UsageEntry(
@@ -151,9 +151,10 @@ public class CalendarService {
         return totalPaid.divide(BigDecimal.valueOf(totalUsageCount), 0, RoundingMode.HALF_UP);
     }
 
-    private String getDailyCostLevel(BigDecimal dailyCost, BigDecimal monthlyAmount) {
-        BigDecimal goodThreshold = monthlyAmount.divide(BigDecimal.valueOf(20), 0, RoundingMode.HALF_UP);
-        BigDecimal normalThreshold = monthlyAmount.divide(BigDecimal.valueOf(10), 0, RoundingMode.HALF_UP);
+    private String getDailyCostLevel(BigDecimal dailyCost, BigDecimal totalAmount) {
+        // 총 금액 기준: 20회 이상 사용 시 good, 10~20회 normal, 10회 미만 warning
+        BigDecimal goodThreshold = totalAmount.divide(BigDecimal.valueOf(20), 0, RoundingMode.HALF_UP);
+        BigDecimal normalThreshold = totalAmount.divide(BigDecimal.valueOf(10), 0, RoundingMode.HALF_UP);
 
         if (dailyCost.compareTo(goodThreshold) <= 0) {
             return "good";

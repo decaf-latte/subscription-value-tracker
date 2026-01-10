@@ -154,10 +154,10 @@ public class SubscriptionService {
         return totalPaid.divide(BigDecimal.valueOf(totalUsageCount), 0, RoundingMode.HALF_UP);
     }
 
-    public String getDailyCostLevel(BigDecimal dailyCost, BigDecimal monthlyAmount) {
-        // 일일 비용이 월 금액의 1/20 이하면 good, 1/10 이하면 normal, 그 이상이면 warning
-        BigDecimal goodThreshold = monthlyAmount.divide(BigDecimal.valueOf(20), 0, RoundingMode.HALF_UP);
-        BigDecimal normalThreshold = monthlyAmount.divide(BigDecimal.valueOf(10), 0, RoundingMode.HALF_UP);
+    public String getDailyCostLevel(BigDecimal dailyCost, BigDecimal totalAmount) {
+        // 총 금액 기준: 20회 이상 사용 시 good, 10~20회 normal, 10회 미만 warning
+        BigDecimal goodThreshold = totalAmount.divide(BigDecimal.valueOf(20), 0, RoundingMode.HALF_UP);
+        BigDecimal normalThreshold = totalAmount.divide(BigDecimal.valueOf(10), 0, RoundingMode.HALF_UP);
 
         if (dailyCost.compareTo(goodThreshold) <= 0) {
             return "good";
@@ -179,7 +179,7 @@ public class SubscriptionService {
     public SubscriptionViewDto toViewDto(Subscription subscription) {
         int usageCount = getTotalUsageCount(subscription.getId());
         BigDecimal dailyCost = calculateDailyCost(subscription);
-        String dailyCostLevel = getDailyCostLevel(dailyCost, subscription.getMonthlyAmount());
+        String dailyCostLevel = getDailyCostLevel(dailyCost, subscription.getTotalAmount());
         boolean checkedInToday = isCheckedInToday(subscription.getId());
         String emoji = EmojiMapper.toEmoji(subscription.getEmojiCode());
 

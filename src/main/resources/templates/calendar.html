@@ -66,6 +66,7 @@
                     </div>
                 </div>
                 <form th:action="@{/subscriptions/{id}/check-in(id=${sub.id})}" method="post">
+                    <input type="hidden" name="returnUrl" th:value="'/calendar?year=' + ${year} + '&month=' + ${month}">
                     <button type="submit"
                             th:classappend="${sub.checkedInToday} ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-red-500/20 hover:text-red-500 dark:hover:text-red-400' : 'bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-white'"
                             class="w-full mt-2 md:mt-3 py-2 rounded-xl text-sm font-medium transition group">
@@ -146,6 +147,12 @@
             if (!subscriptionData || subscriptionData.length === 0) {
                 listContainer.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center py-4">등록된 구독이 없습니다</p>';
             } else {
+                // 현재 캘린더의 year/month 가져오기
+                var calendarGrid = document.getElementById('calendar-grid');
+                var currentYear = calendarGrid ? calendarGrid.dataset.year : '';
+                var currentMonth = calendarGrid ? calendarGrid.dataset.month : '';
+                var returnUrl = '/calendar' + (currentYear && currentMonth ? '?year=' + currentYear + '&month=' + currentMonth : '');
+
                 subscriptionData.forEach(function(sub) {
                     var item = document.createElement('form');
                     item.method = 'post';
@@ -156,6 +163,7 @@
 
                     item.innerHTML =
                         '<input type="hidden" name="date" value="' + date + '">' +
+                        '<input type="hidden" name="returnUrl" value="' + returnUrl + '">' +
                         '<button type="submit" ' +
                         'class="w-full flex items-center gap-3 p-3 bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 rounded-xl transition text-left">' +
                         '<span class="text-xl md:text-2xl">' + (sub.emoji || '📌') + '</span>' +

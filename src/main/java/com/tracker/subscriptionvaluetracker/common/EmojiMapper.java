@@ -52,6 +52,13 @@ public class EmojiMapper {
     }
 
     public static String toEmoji(String code) {
+        if (code == null || code.isEmpty()) {
+            return EMOJI_MAP.get("default");
+        }
+        // 이미 이모지인 경우 그대로 반환 (이모지는 보통 surrogate pair로 시작)
+        if (!code.matches("^[a-zA-Z_]+$")) {
+            return code;
+        }
         return EMOJI_MAP.getOrDefault(code, EMOJI_MAP.get("default"));
     }
 

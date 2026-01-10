@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -31,7 +32,7 @@
     <script>
         // 테마 초기화 (FOUC 방지)
         (function() {
-            const theme = localStorage.getItem('theme') || 'dark';
+            const theme = localStorage.getItem('theme') || 'light';
             if (theme === 'dark') {
                 document.documentElement.classList.add('dark');
             }
@@ -69,10 +70,10 @@
                    class="px-3 py-1.5 text-sm bg-light-card dark:bg-dark-card rounded-lg border border-light-border dark:border-dark-border hover:border-gray-400 dark:hover:border-gray-600 transition">
                     📦 투자
                 </a>
-                <a th:href="@{/subscriptions/new}"
+                <button onclick="openSubscriptionModal()"
                    class="px-3 py-1.5 text-sm bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition">
                     + 구독 추가
-                </a>
+                </button>
                 <!-- Theme Toggle -->
                 <button id="themeToggle" class="p-2 rounded-lg border border-light-border dark:border-dark-border hover:border-gray-400 dark:hover:border-gray-600 transition" title="테마 변경">
                     <span id="themeIcon">🌙</span>
@@ -109,10 +110,10 @@
                    class="px-3 py-2 text-sm bg-light-card dark:bg-dark-card rounded-lg border border-light-border dark:border-dark-border">
                     📦 투자
                 </a>
-                <a th:href="@{/subscriptions/new}"
-                   class="px-3 py-2 text-sm bg-emerald-500 text-white rounded-lg text-center">
+                <button onclick="openSubscriptionModal(); toggleMobileMenu();"
+                   class="px-3 py-2 text-sm bg-emerald-500 text-white rounded-lg text-center w-full">
                     + 구독 추가
-                </a>
+                </button>
             </div>
         </div>
     </header>
@@ -129,10 +130,132 @@
         </div>
     </footer>
 
+    <!-- 구독 추가 모달 -->
+    <div id="subscription-modal" class="fixed inset-0 bg-black/70 hidden items-center justify-center z-50 p-4">
+        <div class="bg-light-card dark:bg-dark-card rounded-2xl border border-light-border dark:border-dark-border w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div class="p-4 md:p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg md:text-xl font-bold">새 구독 추가</h3>
+                    <button onclick="closeSubscriptionModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-white transition">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <form id="subscription-form" action="/subscriptions" method="post" class="space-y-4">
+                    <!-- 이름 -->
+                    <div>
+                        <label for="modal-name" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">서비스 이름</label>
+                        <input type="text" id="modal-name" name="name"
+                               placeholder="헬스장, 넷플릭스 등"
+                               required
+                               class="w-full px-4 py-3 bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-emerald-500 transition">
+                    </div>
+
+                    <!-- 이모지 -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">아이콘</label>
+                        <div class="relative">
+                            <button type="button" id="modal-emoji-btn" onclick="toggleModalEmojiPicker()"
+                                    class="w-full px-4 py-3 bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500 transition text-left flex items-center gap-3">
+                                <span id="modal-emojiPreview" class="text-2xl">😀</span>
+                                <span class="text-gray-500 dark:text-gray-400">클릭하여 이모지 선택</span>
+                            </button>
+                            <input type="hidden" id="modal-emojiCode" name="emojiCode" value="😀" required>
+                            <div id="modal-emoji-picker-container" class="absolute z-50 mt-2 hidden">
+                                <emoji-picker id="modal-emoji-picker"></emoji-picker>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 기간 유형 -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">기간 유형</label>
+                        <div class="flex gap-2">
+                            <input type="number" id="modal-periodNumber"
+                                   placeholder="1"
+                                   required min="1" value="1"
+                                   onchange="updateModalPeriodType()"
+                                   oninput="updateModalPeriodType()"
+                                   class="w-20 px-3 py-3 bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-emerald-500 transition text-center">
+                            <select id="modal-periodUnit"
+                                    onchange="updateModalPeriodType()"
+                                    class="flex-1 px-4 py-3 bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500 transition">
+                                <option value="개월">개월</option>
+                                <option value="회">회</option>
+                            </select>
+                        </div>
+                        <input type="hidden" id="modal-periodType" name="periodType" value="1개월">
+                    </div>
+
+                    <!-- 금액 -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label for="modal-totalAmount" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">총 금액</label>
+                            <div class="relative">
+                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">₩</span>
+                                <input type="number" id="modal-totalAmount" name="totalAmount"
+                                       placeholder="360000"
+                                       required min="0"
+                                       onchange="calculateModalMonthlyAmount()"
+                                       oninput="calculateModalMonthlyAmount()"
+                                       class="w-full pl-10 pr-4 py-3 bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-emerald-500 transition">
+                            </div>
+                        </div>
+                        <div>
+                            <label for="modal-monthlyAmount" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
+                                월 환산 <span class="text-emerald-500 text-xs">(자동)</span>
+                            </label>
+                            <div class="relative">
+                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">₩</span>
+                                <input type="number" id="modal-monthlyAmount" name="monthlyAmount"
+                                       placeholder="자동 계산"
+                                       required min="0"
+                                       readonly
+                                       class="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-white/5 border border-light-border dark:border-dark-border rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none transition">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 날짜 -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label for="modal-startDate" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">시작일</label>
+                            <input type="date" id="modal-startDate" name="startDate"
+                                   required
+                                   onchange="calculateModalEndDate()"
+                                   class="w-full px-4 py-3 bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-xl text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500 transition">
+                        </div>
+                        <div>
+                            <label for="modal-endDate" class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
+                                종료일 <span class="text-emerald-500 text-xs">(자동)</span>
+                            </label>
+                            <input type="date" id="modal-endDate" name="endDate"
+                                   class="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-light-border dark:border-dark-border rounded-xl text-gray-900 dark:text-white focus:outline-none transition">
+                        </div>
+                    </div>
+
+                    <!-- 버튼 -->
+                    <div class="flex gap-3 pt-2">
+                        <button type="button" onclick="closeSubscriptionModal()"
+                                class="flex-1 py-3 text-center bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 transition">
+                            취소
+                        </button>
+                        <button type="submit"
+                                class="flex-1 py-3 bg-emerald-500 text-white rounded-xl font-medium hover:bg-emerald-600 transition">
+                            등록하기
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script>
         // 테마 토글 기능
         function initTheme() {
-            const theme = localStorage.getItem('theme') || 'dark';
+            const theme = localStorage.getItem('theme') || 'light';
             updateTheme(theme);
         }
 
@@ -176,7 +299,129 @@
             if (themeToggle) themeToggle.addEventListener('click', toggleTheme);
             if (themeToggleMobile) themeToggleMobile.addEventListener('click', toggleTheme);
             if (mobileMenuBtn) mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+
+            // 구독 모달 이벤트
+            var subscriptionModal = document.getElementById('subscription-modal');
+            if (subscriptionModal) {
+                subscriptionModal.addEventListener('click', function(e) {
+                    if (e.target === this) closeSubscriptionModal();
+                });
+            }
+
+            // 시작일 기본값 설정
+            var startDateInput = document.getElementById('modal-startDate');
+            if (startDateInput && !startDateInput.value) {
+                startDateInput.value = new Date().toISOString().split('T')[0];
+                calculateModalEndDate();
+            }
         });
+
+        // ESC 키로 모달 닫기
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeSubscriptionModal();
+        });
+
+        // 구독 모달 열기
+        function openSubscriptionModal() {
+            var modal = document.getElementById('subscription-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            // 폼 초기화
+            document.getElementById('subscription-form').reset();
+            document.getElementById('modal-emojiPreview').textContent = '😀';
+            document.getElementById('modal-emojiCode').value = '😀';
+            document.getElementById('modal-periodType').value = '1개월';
+            // 시작일 기본값
+            document.getElementById('modal-startDate').value = new Date().toISOString().split('T')[0];
+            calculateModalEndDate();
+            // 이모지 피커 닫기
+            document.getElementById('modal-emoji-picker-container').classList.add('hidden');
+        }
+
+        // 구독 모달 닫기
+        function closeSubscriptionModal() {
+            var modal = document.getElementById('subscription-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            // 이모지 피커도 닫기
+            document.getElementById('modal-emoji-picker-container').classList.add('hidden');
+        }
+
+        // 모달 이모지 피커 토글
+        function toggleModalEmojiPicker() {
+            var container = document.getElementById('modal-emoji-picker-container');
+            container.classList.toggle('hidden');
+        }
+
+        // 모달 이모지 피커 이벤트 설정
+        document.addEventListener('DOMContentLoaded', function() {
+            var picker = document.getElementById('modal-emoji-picker');
+            if (picker) {
+                picker.addEventListener('emoji-click', function(e) {
+                    var emoji = e.detail.unicode;
+                    document.getElementById('modal-emojiPreview').textContent = emoji;
+                    document.getElementById('modal-emojiCode').value = emoji;
+                    document.getElementById('modal-emoji-picker-container').classList.add('hidden');
+                });
+            }
+
+            // 피커 외부 클릭 시 닫기
+            document.addEventListener('click', function(e) {
+                var container = document.getElementById('modal-emoji-picker-container');
+                var btn = document.getElementById('modal-emoji-btn');
+                if (container && btn && !container.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
+                    container.classList.add('hidden');
+                }
+            });
+        });
+
+        // 모달 기간 유형 업데이트
+        function updateModalPeriodType() {
+            var periodNumber = document.getElementById('modal-periodNumber').value;
+            var periodUnit = document.getElementById('modal-periodUnit').value;
+            var periodTypeInput = document.getElementById('modal-periodType');
+
+            if (periodNumber) {
+                periodTypeInput.value = periodNumber + periodUnit;
+            }
+            calculateModalMonthlyAmount();
+            calculateModalEndDate();
+        }
+
+        // 모달 월 환산 금액 계산
+        function calculateModalMonthlyAmount() {
+            var totalAmount = document.getElementById('modal-totalAmount').value;
+            var periodNumber = document.getElementById('modal-periodNumber').value;
+            var monthlyAmountInput = document.getElementById('modal-monthlyAmount');
+
+            if (!totalAmount || !periodNumber) return;
+
+            var calculatedAmount = Math.round(totalAmount / parseInt(periodNumber));
+            monthlyAmountInput.value = calculatedAmount;
+        }
+
+        // 모달 종료일 자동 계산
+        function calculateModalEndDate() {
+            var startDateInput = document.getElementById('modal-startDate');
+            var endDateInput = document.getElementById('modal-endDate');
+            var periodNumber = document.getElementById('modal-periodNumber').value;
+            var periodUnit = document.getElementById('modal-periodUnit').value;
+
+            if (!startDateInput.value || !periodNumber) return;
+
+            var startDate = new Date(startDateInput.value);
+            var endDate = new Date(startDate);
+
+            if (periodUnit === '개월') {
+                endDate.setMonth(endDate.getMonth() + parseInt(periodNumber));
+                endDate.setDate(endDate.getDate() - 1); // 시작일 포함이므로 하루 빼기
+            }
+            // '회' 단위는 종료일 자동 계산 안함
+
+            if (periodUnit === '개월') {
+                endDateInput.value = endDate.toISOString().split('T')[0];
+            }
+        }
     </script>
 </body>
 </html>

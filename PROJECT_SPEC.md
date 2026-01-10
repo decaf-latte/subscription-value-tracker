@@ -74,7 +74,9 @@ public class Subscription {
     
     private LocalDate startDate;       // 시작일
     private LocalDate endDate;         // 종료일 (선택)
-    
+
+    private Integer monthlyTargetUsage; // 월 목표 사용 횟수 (null이면 자동계산: 월구독료 ÷ 3000)
+
     private Boolean isActive = true;
     
     // getters, setters, constructors
@@ -536,3 +538,7 @@ data class ApiResponse<T>(
 | 2025-01-08 | **템플릿 추가**: subscription/list.html, subscription/form.html |
 | 2025-01-08 | **캘린더 뷰 구현**: CalendarService, CalendarController, calendar.html |
 | 2025-01-08 | **UI 개선**: 기간 유형 드롭다운, 월/회당 환산 금액 자동계산 |
+| 2025-01-10 | **구독 수정 모달**: 대시보드에서 연필 아이콘 클릭하여 모달로 수정 가능 |
+| 2025-01-10 | **종료된 구독 제외**: endDate가 지난 구독은 월 구독료 계산에서 제외 |
+| 2025-01-10 | **본전 진행률**: 캘린더 페이지에 구독별 기간/사용 진행률 프로그레스바 추가 |
+| 2025-01-10 | **월 목표 횟수**: Subscription 엔티티에 monthlyTargetUsage 필드 추가 (자동계산: 월구독료 ÷ 3000) |

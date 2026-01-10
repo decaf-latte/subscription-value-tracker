@@ -22,7 +22,8 @@ src/main/java/com/tracker/subscriptionvaluetracker/
 │       ├── SubscriptionController.java         # 구독 CRUD 컨트롤러
 │       ├── SubscriptionForm.java               # 입력 폼 DTO
 │       ├── SubscriptionViewDto.java            # 뷰 출력 DTO
-│       └── CalendarDayDto.java                 # 캘린더 일자 DTO
+│       ├── CalendarDayDto.java                 # 캘린더 일자 DTO
+│       └── SubscriptionProgressDto.java        # 본전 진행률 DTO
 │
 └── web/                                         # 웹 레이어
     ├── DashboardController.java                # 메인 대시보드 컨트롤러
@@ -53,6 +54,7 @@ erDiagram
         varchar(50) period_type "기간 유형"
         decimal(10) total_amount "총 금액"
         decimal(10) monthly_amount "월 환산 금액"
+        int monthly_target_usage "월 목표 사용 횟수 (nullable)"
         date start_date "시작일"
         date end_date "종료일 (nullable)"
         boolean is_active "활성 상태"
@@ -327,7 +329,28 @@ public String getDailyCostLevel(BigDecimal dailyCost, BigDecimal monthlyAmount) 
 }
 ```
 
-### 5.3 사용자 식별
+### 5.3 본전 진행률 계산
+
+```java
+// CalendarService.java
+public List<SubscriptionProgressDto> getSubscriptionProgress(String userUuid) {
+    LocalDate today = LocalDate.now();
+    List<Subscription> subscriptions = subscriptionRepository.findCurrentSubscriptions(userUuid, today);
+    return subscriptions.stream()
+            .map(sub -> calculateProgress(sub, today))
+            .toList();
+}
+
+private SubscriptionProgressDto calculateProgress(Subscription subscription, LocalDate today) {
+    // 월 목표 횟수: 사용자 입력값 또는 자동계산 (월구독료 ÷ 3000)
+    int monthlyTarget = subscription.getCalculatedMonthlyTarget();
+
+    // 전체 기간, 목표 총 사용 횟수, 현재 총 사용 횟수 계산
+    // 사용률 >= 기간 진행률 → good, 차이 20% 이내 → normal, 그 외 → warning
+}
+```
+
+### 5.4 사용자 식별
 
 ```java
 // UserIdentifier.java
@@ -394,6 +417,7 @@ src/main/resources/templates/
 | POST | `/subscriptions/{id}` | 구독 수정 | SubscriptionController |
 | POST | `/subscriptions/{id}/delete` | 구독 삭제 (soft delete) | SubscriptionController |
 | POST | `/subscriptions/{id}/check-in` | 출석 체크 | SubscriptionController |
+| GET | `/subscriptions/{id}/json` | 구독 JSON 조회 (수정 모달용) | SubscriptionController |
 | GET | `/investments` | 투자 목록 | InvestmentController |
 | GET | `/investments/new` | 투자 등록 폼 | InvestmentController |
 | POST | `/investments` | 투자 등록 | InvestmentController |
@@ -448,7 +472,7 @@ open build/reports/tests/test/index.html
 |--------|-------------|
 | SubscriptionService | 구독 CRUD, 출석 체크/토글, 일일비용 계산, 비용 레벨 판단 |
 | SubscriptionController | 목록 조회, 폼 표시, 생성/수정/삭제, 출석 체크 |
-| CalendarService | 캘린더 데이터 생성, 출석 기록 표시, 범례 조회 |
+| CalendarService | 캘린더 데이터 생성, 출석 기록 표시, 범례 조회, 본전 진행률 계산 |
 | CalendarController | 캘린더 페이지, 그리드 HTMX, 월 이동, 통계 계산 |
 | InvestmentService | 투자 CRUD, 사용기록 추가/삭제, 손익분기점 계산, 절약액 계산 |
 | InvestmentController | 목록 조회, 상세 조회, 폼 표시, 생성/수정/삭제, 사용기록 관리 |
@@ -473,6 +497,12 @@ open build/reports/tests/test/index.html
 - ~~Investment 엔티티~~
 - ~~손익분기점 계산~~
 - ~~절약액 추적~~
+
+### ~~Phase 3.5: 본전 진행률~~ ✅ 완료
+- ~~구독 수정 모달 (대시보드에서 연필 아이콘 클릭)~~
+- ~~종료된 구독 제외 (endDate 지난 구독은 통계에서 제외)~~
+- ~~본전 진행률 프로그레스바 (캘린더 페이지)~~
+- ~~월 목표 횟수 설정 (자동계산: 월구독료 ÷ 3000)~~
 
 ### Phase 4: 차트
 - Chart.js 월별 사용 추이

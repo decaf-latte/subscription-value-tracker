@@ -14,7 +14,11 @@
       "Bash(ls:*)",
       "Bash(lsof:*)",
       "Bash(xargs kill:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "WebSearch",
+      "Bash(cd:*)",
+      "Bash(grep:*)",
+      "Bash(git rebase:*)"
     ]
   }
 }

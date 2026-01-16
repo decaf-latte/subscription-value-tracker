@@ -409,6 +409,57 @@ claude mcp add taskmanager
 claude mcp add github
 ```
 
+### 8.6 Hooks 활용
+
+Claude Code Hooks는 특정 이벤트 발생 시 자동으로 실행되는 스크립트입니다. 이 프로젝트에서 설정한 Hook:
+
+#### 커밋 전 자동 테스트 (PreToolUse Hook)
+
+**설정 파일**: `.claude/settings.local.json`
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if echo \"$CLAUDE_TOOL_INPUT\" | jq -r '.command' 2>/dev/null | grep -q '^git commit'; then ./.claude/hooks/precommit.sh; fi",
+            "timeout": 180
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+**스크립트**: `.claude/hooks/precommit.sh`
+```bash
+#!/bin/bash
+echo "🔍 Running pre-commit checks..."
+./gradlew test --quiet
+
+if [ $? -ne 0 ]; then
+    echo "❌ Tests failed! Commit blocked."
+    exit 2  # Claude에게 작업 차단 신호
+fi
+echo "✅ All tests passed!"
+```
+
+**작동 흐름**:
+```
+git commit 시도 → PreToolUse Hook 발동 → ./gradlew test 실행
+├── 테스트 통과 (exit 0) → 커밋 진행
+└── 테스트 실패 (exit 2) → 커밋 차단 + Claude에게 피드백
+```
+
+**활용 효과**:
+- AI가 커밋하기 전 자동으로 테스트 검증
+- 테스트 실패 시 Claude가 자동으로 수정 시도
+- 품질 게이트 역할로 안정성 확보
+
 ---
 
 ## 9. AI 없이 직접 수행한 역할 (TODO)

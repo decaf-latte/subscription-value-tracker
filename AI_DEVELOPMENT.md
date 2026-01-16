@@ -460,6 +460,63 @@ git commit 시도 → PreToolUse Hook 발동 → ./gradlew test 실행
 - 테스트 실패 시 Claude가 자동으로 수정 시도
 - 품질 게이트 역할로 안정성 확보
 
+#### Git Hook vs Claude Code Hook 비교
+
+이 프로젝트에서는 **두 가지 Hook을 모두 설정**하여 어디서 커밋하든 검사가 실행되도록 구성했습니다.
+
+| 구분 | Claude Code Hook | Git Hook |
+|------|-----------------|----------|
+| **설정 위치** | `.claude/settings.local.json` | `.git/hooks/pre-commit` |
+| **발동 시점** | Claude가 도구 실행 전 | git 명령 실행 전 |
+| **적용 범위** | Claude Code 안에서만 | 모든 git 클라이언트 (터미널, IDE) |
+| **피드백 방식** | Claude에게 자동 전달 → 자동 수정 시도 | 터미널에 출력 → 개발자가 직접 수정 |
+| **exit 코드** | `exit 2` = 차단 + 피드백 | `exit 1` = 커밋 차단 |
+| **팀 공유** | `.claude/` 디렉토리로 공유 | `scripts/` + 설치 스크립트로 공유 |
+
+**Git Hook 설정 파일**:
+```
+scripts/
+├── pre-commit        # 실제 hook 스크립트
+└── install-hooks.sh  # 설치 스크립트 (팀원 공유용)
+```
+
+**설치 방법**:
+```bash
+./scripts/install-hooks.sh
+```
+
+**Git Hook 스크립트** (`scripts/pre-commit`):
+```bash
+#!/bin/bash
+# Step 1: 린트 검사
+./gradlew checkstyleMain --quiet
+if [ $? -ne 0 ]; then exit 1; fi
+
+# Step 2: 테스트 실행
+./gradlew test --quiet
+if [ $? -ne 0 ]; then exit 1; fi
+```
+
+**두 Hook의 협력 관계**:
+```
+[Claude Code에서 커밋]
+  → Claude Code Hook 발동 (exit 2로 차단 + 자동 수정)
+  → Git Hook도 발동 (이중 검증)
+
+[터미널/IDE에서 커밋]
+  → Claude Code Hook 발동 안 됨
+  → Git Hook만 발동 (수동 수정 필요)
+```
+
+**회사에서 활용 가능한 Hook 예시**:
+
+| Hook 종류 | 용도 | 예시 |
+|----------|------|------|
+| **pre-commit** | 커밋 전 검사 | 린트, 테스트, 보안 스캔 |
+| **commit-msg** | 커밋 메시지 검증 | Jira 티켓 번호 필수화 |
+| **pre-push** | 푸시 전 검사 | 통합 테스트, 빌드 확인 |
+| **post-merge** | 머지 후 작업 | 의존성 자동 설치 |
+
 ---
 
 ## 9. AI 없이 직접 수행한 역할 (TODO)

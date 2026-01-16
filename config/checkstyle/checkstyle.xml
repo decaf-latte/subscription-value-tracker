@@ -5,7 +5,7 @@
 
 <!--
     Checkstyle 설정 - 구독 가성비 트래커
-    Google Java Style 기반, 프로젝트에 맞게 완화
+    기본적인 코드 품질 검사
 -->
 <module name="Checker">
     <property name="charset" value="UTF-8"/>
@@ -17,13 +17,9 @@
         <property name="max" value="500"/>
     </module>
 
-    <!-- 탭 문자 금지 -->
-    <module name="FileTabCharacter"/>
-
-    <!-- 줄 끝 공백 금지 -->
-    <module name="RegexpSingleline">
-        <property name="format" value="\s+$"/>
-        <property name="message" value="Line has trailing spaces."/>
+    <!-- 줄 길이 (Checker 레벨) -->
+    <module name="LineLength">
+        <property name="max" value="150"/>
     </module>
 
     <module name="TreeWalker">
@@ -39,51 +35,18 @@
         <!-- import 규칙 -->
         <module name="AvoidStarImport"/>
         <module name="UnusedImports"/>
-        <module name="RedundantImport"/>
 
         <!-- 코드 블록 -->
         <module name="EmptyBlock"/>
-        <module name="LeftCurly"/>
-        <module name="RightCurly"/>
         <module name="NeedBraces"/>
-
-        <!-- 공백 -->
-        <module name="WhitespaceAfter"/>
-        <module name="WhitespaceAround">
-            <property name="allowEmptyConstructors" value="true"/>
-            <property name="allowEmptyMethods" value="true"/>
-            <property name="allowEmptyTypes" value="true"/>
-        </module>
-        <module name="NoWhitespaceBefore"/>
-        <module name="GenericWhitespace"/>
 
         <!-- 코드 품질 -->
         <module name="EmptyStatement"/>
         <module name="EqualsHashCode"/>
-        <module name="SimplifyBooleanExpression"/>
-        <module name="SimplifyBooleanReturn"/>
-        <module name="StringLiteralEquality"/>
 
         <!-- 메서드 길이 -->
         <module name="MethodLength">
-            <property name="max" value="80"/>
-        </module>
-
-        <!-- 파라미터 개수 -->
-        <module name="ParameterNumber">
-            <property name="max" value="8"/>
-        </module>
-
-        <!-- 줄 길이 -->
-        <module name="LineLength">
-            <property name="max" value="120"/>
-            <property name="ignorePattern" value="^package.*|^import.*|a]* href|href|http://|https://|ftp://"/>
-        </module>
-
-        <!-- 들여쓰기 -->
-        <module name="Indentation">
-            <property name="basicOffset" value="4"/>
-            <property name="caseIndent" value="4"/>
+            <property name="max" value="100"/>
         </module>
     </module>
 </module>

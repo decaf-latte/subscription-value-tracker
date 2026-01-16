@@ -173,7 +173,7 @@
 
 #### Hooks & Skills
 - [x] 커밋 전 자동 테스트 Hook 설정
-- [ ] 린트 자동 실행 Hook 설정
+- [x] 린트 자동 실행 Hook 설정 (Checkstyle)
 - [ ] 프로젝트 전용 Skill 정의
 
 ### Phase 5: 기능 확장

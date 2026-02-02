@@ -11,6 +11,7 @@ jobs:
       contents: read
       pull-requests: write
       issues: write
+      id-token: write
 
     steps:
       - name: Checkout repository
@@ -21,8 +22,7 @@ jobs:
       - name: Run Claude Code Review
         uses: anthropics/claude-code-action@beta
         with:
-          use_oauth: true
-          claude_access_token: ${{ secrets.CLAUDE_ACCESS_TOKEN }}
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           direct_prompt: |
             이 PR의 코드 변경사항을 리뷰해주세요.
 

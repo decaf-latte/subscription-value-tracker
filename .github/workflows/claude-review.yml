@@ -23,6 +23,7 @@ jobs:
         uses: anthropics/claude-code-action@beta
         with:
           anthropic_api_key: ${{ secrets.CLAUDE_ACCESS_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           direct_prompt: |
             이 PR의 코드 변경사항을 리뷰해주세요.
 

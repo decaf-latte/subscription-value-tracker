@@ -1,16 +1,5 @@
 #!/bin/bash
 # Git pre-commit hook wrapper
-# 실제 로직은 .claude/hooks/precommit.sh에 있음
+# 실제 로직은 .claude/hooks/precommit.sh에 위임
 
-# 프로젝트 루트로 이동
-PROJECT_ROOT="$(git rev-parse --show-toplevel)"
-cd "$PROJECT_ROOT" || exit 1
-
-# Claude hooks의 precommit 스크립트 실행
-if [ -f ".claude/hooks/precommit.sh" ]; then
-    exec .claude/hooks/precommit.sh
-else
-    echo "⚠️  .claude/hooks/precommit.sh not found"
-    echo "Run: chmod +x .claude/hooks/precommit.sh"
-    exit 1
-fi
+exec "$(git rev-parse --show-toplevel)/.claude/hooks/precommit.sh"

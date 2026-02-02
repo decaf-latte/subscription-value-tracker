@@ -31,7 +31,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "if printf '%s' \"$CLAUDE_TOOL_INPUT\" | jq -r '.command' 2>/dev/null | grep -q '^git commit'; then ./.claude/hooks/precommit.sh; fi",
+            "command": "if printf '%s' \"$CLAUDE_TOOL_INPUT\" | jq -r '.command' 2>/dev/null | grep -Eq '^git[[:space:]]+commit[[:space:]]*'; then ./.claude/hooks/precommit.sh; fi",
             "timeout": 180
           }
         ]

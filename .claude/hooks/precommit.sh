@@ -11,9 +11,8 @@ echo ""
 echo "📋 Step 1/2: Lint check (Checkstyle)..."
 
 # Checkstyle이 설정되어 있는지 확인
-if ./gradlew tasks --all 2>/dev/null | grep -q "checkstyleMain"; then
-    ./gradlew checkstyleMain --quiet 2>/dev/null
-    if [ $? -ne 0 ]; then
+if ./gradlew tasks --all 2>&1 | grep -q "checkstyleMain"; then
+    if ! ./gradlew checkstyleMain --quiet; then
         echo "❌ Lint check failed! Commit blocked."
         echo "Run './gradlew checkstyleMain' to see details."
         exit 1

@@ -1,0 +1,5 @@
+#!/bin/bash
+# Git pre-commit hook wrapper
+# 실제 로직은 .claude/hooks/precommit.sh에 위임
+
+exec "$(git rev-parse --show-toplevel)/.claude/hooks/precommit.sh"

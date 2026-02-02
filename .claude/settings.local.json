@@ -14,7 +14,28 @@
       "Bash(ls:*)",
       "Bash(lsof:*)",
       "Bash(xargs kill:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "WebSearch",
+      "Bash(cd:*)",
+      "Bash(grep:*)",
+      "Bash(git rebase:*)",
+      "Bash(chmod:*)",
+      "mcp__github__create_pull_request",
+      "Bash(git pull:*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if printf '%s' \"$CLAUDE_TOOL_INPUT\" | jq -r '.command' 2>/dev/null | grep -Eq '^git[[:space:]]+commit[[:space:]]*'; then ./.claude/hooks/precommit.sh; fi",
+            "timeout": 180
+          }
+        ]
+      }
     ]
   }
 }

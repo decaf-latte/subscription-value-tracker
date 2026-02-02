@@ -110,9 +110,181 @@ HTMX를 써서 캘린더 영역만 부분 업데이트 되도록 바꿔줘.
 
 ---
 
-## 3. AI 활용의 장점
+## 3. AI 협업 워크플로우
 
-### 3.1 생산성 향상
+### 3.1 전체 작업 흐름
+
+```mermaid
+flowchart TD
+    A[요구사항 정리] --> B[AI에게 설계 요청]
+    B --> C{결과 검토}
+    C -->|OK| D[구현 요청]
+    C -->|수정 필요| E[피드백 & 재요청]
+    E --> B
+    D --> F{코드 리뷰}
+    F -->|OK| G[테스트 요청]
+    F -->|문제 발견| H[수정 지시]
+    H --> D
+    G --> I{테스트 통과?}
+    I -->|Yes| J[QA & 문서화]
+    I -->|No| K[버그 수정 요청]
+    K --> G
+    J --> L[완료]
+```
+
+### 3.2 단계별 역할 분담
+
+| 단계 | AI 역할 | 내 역할 |
+|------|--------|--------|
+| **설계** | 구조 제안, 패턴 추천 | 요구사항 명확화, 최종 결정 |
+| **구현** | 코드 생성, 보일러플레이트 | 비즈니스 로직 검증, 코드 리뷰 |
+| **테스트** | 테스트 코드 작성 | 엣지 케이스 추가, 커버리지 확인 |
+| **디버깅** | 원인 분석, 수정안 제시 | 문제 재현, 해결책 선택 |
+| **문서화** | 초안 작성 | 맥락 추가, 톤 조정 |
+
+---
+
+## 4. AI 수정 및 디버깅 사례
+
+### 4.1 Thymeleaf 보안 이슈 수정
+
+**문제 상황**
+```html
+<!-- AI가 처음 생성한 코드 -->
+<div th:onclick="'openModal(' + ${date} + ')'">
+```
+
+**발생한 오류**
+- Thymeleaf에서 보안상 이벤트 핸들러에 동적 변수 사용 불가
+- 템플릿 렌더링 시 에러 발생
+
+**수정 지시**
+```
+onclick에 변수를 직접 넣으면 Thymeleaf 보안 에러가 나.
+data attribute에 값을 넣고 JavaScript에서 읽는 방식으로 바꿔줘.
+```
+
+**수정된 코드**
+```html
+<!-- 수정 후 -->
+<div class="clickable-date" th:data-date="${date}">
+
+<script>
+document.querySelectorAll('.clickable-date').forEach(el => {
+    el.addEventListener('click', () => openModal(el.dataset.date));
+});
+</script>
+```
+
+**배운 점**: AI는 기능 구현에 집중하지만, 프레임워크별 보안 제약은 실제 실행해봐야 발견되는 경우가 있음
+
+---
+
+### 4.2 비용 계산 로직 수정
+
+**문제 상황**
+```java
+// AI가 처음 구현한 로직
+public BigDecimal calculateCostPerUse(Long subscriptionId, YearMonth month) {
+    int monthlyUsage = getUsageCountForMonth(subscriptionId, month);
+    return monthlyAmount.divide(BigDecimal.valueOf(monthlyUsage));
+}
+```
+
+**문제점 발견**
+- 1월에 4번, 2월에 1번 사용 시
+- AI 구현: 1월은 ÷4, 2월은 ÷1로 각각 다르게 표시
+- 원하는 것: 전체 5번으로 나눠서 모든 날짜에 동일하게 표시
+
+**수정 지시**
+```
+비용 계산이 이상해. 현재는 월별로 나누는데,
+나는 구독 시작부터 현재까지 "총 사용 횟수"로 나누고 싶어.
+
+예시:
+- 12개월 구독 총 180,000원
+- 총 10회 사용
+- 모든 날짜에 18,000원/회로 표시
+```
+
+**수정된 코드**
+```java
+// 수정 후
+public BigDecimal calculateCostPerUse(Long subscriptionId) {
+    int totalUsage = getTotalUsageCount(subscriptionId);
+    BigDecimal totalPaid = calculateTotalPaidAmount(subscriptionId);
+    return totalPaid.divide(BigDecimal.valueOf(totalUsage), 0, RoundingMode.HALF_UP);
+}
+```
+
+**배운 점**: 비즈니스 로직은 구체적인 예시와 함께 설명해야 AI가 정확히 이해함
+
+---
+
+### 4.3 HTMX 부분 업데이트 개선
+
+**문제 상황**
+- 출석 체크 버튼 클릭 시 페이지 전체가 새로고침
+- 사용자 경험 저하 (깜빡임, 스크롤 위치 초기화)
+
+**개선 요청**
+```
+출석 체크할 때 페이지 전체가 새로고침 되는데,
+HTMX를 써서 해당 카드만 부분 업데이트 되도록 바꿔줘.
+요약 통계도 같이 업데이트 되어야 해.
+```
+
+**AI 제안 vs 내 선택**
+
+| AI 제안 | 내 판단 |
+|--------|--------|
+| 카드만 업데이트 (hx-swap) | 요약 통계도 함께 업데이트 필요 |
+| 새 엔드포인트 추가 | 기존 엔드포인트에서 HTMX 요청 감지로 처리 |
+
+**최종 구현**
+```html
+<!-- oob-swap으로 여러 영역 동시 업데이트 -->
+<div hx-post="/subscriptions/{id}/check-in"
+     hx-target="this"
+     hx-swap="outerHTML">
+
+<!-- check-in-response.html -->
+<div id="subscription-card-{id}">...</div>
+<div id="summary-stats" hx-swap-oob="true">...</div>
+```
+
+**배운 점**: AI가 기본 구현을 해주면, UX 관점에서 추가 요구사항을 명확히 전달하는 것이 중요
+
+---
+
+## 5. AI 제안 거절 및 대안 선택 사례
+
+### 5.1 데이터베이스 설계
+
+| AI 제안 | 내 선택 | 이유 |
+|--------|--------|------|
+| User 테이블 + 로그인 | UUID 쿠키 방식 | MVP 단계에서 복잡도 최소화 |
+| UsageLog에 금액 저장 | 금액은 계산으로 도출 | 데이터 정합성, 중복 제거 |
+
+### 5.2 UI/UX 결정
+
+| AI 제안 | 내 선택 | 이유 |
+|--------|--------|------|
+| 모달로 구독 등록 | 별도 페이지 | 입력 필드가 많아 모달은 불편 |
+| 무한 스크롤 | 월별 페이지네이션 | 캘린더 특성상 월 단위가 자연스러움 |
+
+### 5.3 기술 선택
+
+| AI 제안 | 내 선택 | 이유 |
+|--------|--------|------|
+| React 프론트엔드 | Thymeleaf + HTMX | 빌드 없이 빠른 개발, 학습 목적 |
+| JPA 양방향 관계 | 단방향 관계 | 순환 참조 방지, 단순성 |
+
+---
+
+## 6. AI 활용의 장점
+
+### 6.1 생산성 향상
 
 | 항목 | AI 없이 (추정) | AI 활용 | 단축률 |
 |------|---------------|---------|--------|
@@ -123,14 +295,14 @@ HTMX를 써서 캘린더 영역만 부분 업데이트 되도록 바꿔줘.
 | 차트 기능 | 4-6시간 | 1-2시간 | ~70% |
 | **전체 프로젝트** | **3-4주** | **4일** | **~85%** |
 
-### 3.2 코드 품질
+### 6.2 코드 품질
 
 - **일관된 코드 스타일**: 프로젝트 전반에 동일한 패턴 적용
 - **모범 사례 적용**: Spring Boot, JPA 베스트 프랙티스 자동 적용
 - **보안 이슈 감지**: XSS 취약점 등 보안 문제 발견 및 수정
 - **테스트 코드 작성**: 단위 테스트 자동 생성
 
-### 3.3 학습 효과
+### 6.3 학습 효과
 
 - 새로운 기술(HTMX) 빠르게 적용
 - Tailwind CSS 클래스 활용법 습득
@@ -138,23 +310,22 @@ HTMX를 써서 캘린더 영역만 부분 업데이트 되도록 바꿔줘.
 
 ---
 
-## 4. AI 활용의 한계 및 주의점
+## 7. AI 활용의 한계 및 주의점
 
-### 4.1 맥락 이해의 한계
+### 7.1 맥락 이해의 한계
 
-```
-문제: 비용 계산 로직을 "이번 달 사용 횟수"로 구현
-원인: 초기 PRD의 표현이 모호했음
-해결: 구체적인 예시와 함께 요구사항 재설명
-```
+> 섹션 4에서 상세 사례를 다뤘으므로, 여기서는 요약만 제시
 
-### 4.2 UI/UX 감각
+- 비즈니스 요구사항이 모호하면 AI도 잘못 구현함
+- **해결책**: 구체적인 예시와 함께 요구사항 설명
+
+### 7.2 UI/UX 감각
 
 - AI는 기능 구현에 강하지만, 미적 감각은 제한적
 - 색상 선택, 레이아웃 배치 등은 직접 조정 필요
 - 와이어프레임 등 시각적 레퍼런스 제공하면 효과적
 
-### 4.3 비즈니스 로직 검증 필요
+### 7.3 비즈니스 로직 검증 필요
 
 ```java
 // AI가 생성한 코드
@@ -169,7 +340,7 @@ public BigDecimal calculateCostPerUse() {
 // - 반올림 방식이 적절한지?
 ```
 
-### 4.4 지속적인 커뮤니케이션
+### 7.4 지속적인 커뮤니케이션
 
 - 한 번에 완벽한 코드를 기대하지 말 것
 - 반복적인 피드백과 수정 요청 필요
@@ -177,9 +348,9 @@ public BigDecimal calculateCostPerUse() {
 
 ---
 
-## 5. 효과적인 AI 활용 팁
+## 8. 효과적인 AI 활용 팁
 
-### 5.1 명확한 컨텍스트 제공
+### 8.1 명확한 컨텍스트 제공
 
 ```
 좋은 예:
@@ -190,7 +361,7 @@ public BigDecimal calculateCostPerUse() {
 "출석 체크 기능 만들어줘"
 ```
 
-### 5.2 CLAUDE.md 활용
+### 8.2 CLAUDE.md 활용
 
 프로젝트 루트에 `CLAUDE.md` 파일을 두면 Claude Code가 자동으로 읽어서 컨텍스트로 활용합니다:
 
@@ -203,7 +374,7 @@ public BigDecimal calculateCostPerUse() {
 - Git 워크플로우
 ```
 
-### 5.3 단계별 개발
+### 8.3 단계별 개발
 
 ```
 1단계: 엔티티 설계 → 검토 → 확정
@@ -212,7 +383,7 @@ public BigDecimal calculateCostPerUse() {
 4단계: 테스트 코드 → 검토 → 확정
 ```
 
-### 5.4 QA 프로세스
+### 8.4 QA 프로세스
 
 기능 개발 후 AI에게 QA 테스트 항목을 요청:
 
@@ -222,7 +393,7 @@ public BigDecimal calculateCostPerUse() {
 
 결과를 `QA_RESULTS.md`에 기록하여 품질 관리.
 
-### 5.5 MCP (Model Context Protocol) 활용
+### 8.5 MCP (Model Context Protocol) 활용
 
 Claude Code는 MCP를 통해 외부 도구와 연동할 수 있습니다. 이 프로젝트에서 활용한 MCP 도구:
 
@@ -238,18 +409,197 @@ claude mcp add taskmanager
 claude mcp add github
 ```
 
+### 8.6 Hooks 활용
+
+Claude Code Hooks는 특정 이벤트 발생 시 자동으로 실행되는 스크립트입니다. 이 프로젝트에서 설정한 Hook:
+
+#### 커밋 전 자동 테스트 (PreToolUse Hook)
+
+**설정 파일**: `.claude/settings.local.json`
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if echo \"$CLAUDE_TOOL_INPUT\" | jq -r '.command' 2>/dev/null | grep -q '^git commit'; then ./.claude/hooks/precommit.sh; fi",
+            "timeout": 180
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+**스크립트**: `.claude/hooks/precommit.sh`
+```bash
+#!/bin/bash
+echo "🔍 Running pre-commit checks..."
+./gradlew test --quiet
+
+if [ $? -ne 0 ]; then
+    echo "❌ Tests failed! Commit blocked."
+    exit 2  # Claude에게 작업 차단 신호
+fi
+echo "✅ All tests passed!"
+```
+
+**작동 흐름**:
+```
+git commit 시도 → PreToolUse Hook 발동 → ./gradlew test 실행
+├── 테스트 통과 (exit 0) → 커밋 진행
+└── 테스트 실패 (exit 2) → 커밋 차단 + Claude에게 피드백
+```
+
+**활용 효과**:
+- AI가 커밋하기 전 자동으로 테스트 검증
+- 테스트 실패 시 Claude가 자동으로 수정 시도
+- 품질 게이트 역할로 안정성 확보
+
+#### Git Hook vs Claude Code Hook 비교
+
+이 프로젝트에서는 **두 가지 Hook을 모두 설정**하여 어디서 커밋하든 검사가 실행되도록 구성했습니다.
+
+| 구분 | Claude Code Hook | Git Hook |
+|------|-----------------|----------|
+| **설정 위치** | `.claude/settings.local.json` | `.git/hooks/pre-commit` |
+| **발동 시점** | Claude가 도구 실행 전 | git 명령 실행 전 |
+| **적용 범위** | Claude Code 안에서만 | 모든 git 클라이언트 (터미널, IDE) |
+| **피드백 방식** | Claude에게 자동 전달 → 자동 수정 시도 | 터미널에 출력 → 개발자가 직접 수정 |
+| **exit 코드** | `exit 2` = 차단 + 피드백 | `exit 1` = 커밋 차단 |
+| **팀 공유** | `.claude/` 디렉토리로 공유 | `scripts/` + 설치 스크립트로 공유 |
+
+**Git Hook 설정 파일**:
+```
+scripts/
+├── pre-commit        # 실제 hook 스크립트
+└── install-hooks.sh  # 설치 스크립트 (팀원 공유용)
+```
+
+**설치 방법**:
+```bash
+./scripts/install-hooks.sh
+```
+
+**Git Hook 스크립트** (`scripts/pre-commit`):
+```bash
+#!/bin/bash
+# Step 1: 린트 검사
+./gradlew checkstyleMain --quiet
+if [ $? -ne 0 ]; then exit 1; fi
+
+# Step 2: 테스트 실행
+./gradlew test --quiet
+if [ $? -ne 0 ]; then exit 1; fi
+```
+
+**두 Hook의 협력 관계**:
+```
+[Claude Code에서 커밋]
+  → Claude Code Hook 발동 (exit 2로 차단 + 자동 수정)
+  → Git Hook도 발동 (이중 검증)
+
+[터미널/IDE에서 커밋]
+  → Claude Code Hook 발동 안 됨
+  → Git Hook만 발동 (수동 수정 필요)
+```
+
+**회사에서 활용 가능한 Hook 예시**:
+
+| Hook 종류 | 용도 | 예시 |
+|----------|------|------|
+| **pre-commit** | 커밋 전 검사 | 린트, 테스트, 보안 스캔 |
+| **commit-msg** | 커밋 메시지 검증 | Jira 티켓 번호 필수화 |
+| **pre-push** | 푸시 전 검사 | 통합 테스트, 빌드 확인 |
+| **post-merge** | 머지 후 작업 | 의존성 자동 설치 |
+
 ---
 
-## 6. 결론
+## 9. AI 없이 직접 수행한 역할 (TODO)
 
-### 6.1 AI 활용 개발의 핵심
+> 이 섹션은 프로젝트 고도화 후 작성 예정
+
+### 9.1 아키텍처 및 설계 결정
+
+| 결정 사항 | 선택지 | 최종 결정 | 이유 |
+|-----------|--------|-----------|------|
+| (예시) 데이터베이스 | MySQL vs PostgreSQL | - | - |
+| - | - | - | - |
+
+### 9.2 요구사항 분석 및 정의
+
+- 비즈니스 요구사항을 기술 요구사항으로 변환한 사례
+- AI에게 설명하기 위해 직접 정리한 내용
+
+### 9.3 코드 리뷰 및 품질 검증
+
+- AI 생성 코드에서 발견한 문제점
+- 직접 수정하거나 개선한 부분
+
+---
+
+## 10. 기술적 깊이: 복잡한 문제 해결 (TODO)
+
+> 이 섹션은 프로젝트 고도화 후 작성 예정
+
+### 10.1 성능 최적화
+
+| 문제 | 원인 분석 | 해결 방법 | 결과 |
+|------|----------|----------|------|
+| (예시) N+1 쿼리 | - | - | - |
+
+### 10.2 동시성/트랜잭션 이슈
+
+- 발생한 문제
+- 해결 과정
+
+### 10.3 보안 고려사항
+
+- 적용한 보안 조치
+- 취약점 발견 및 대응
+
+---
+
+## 11. 운영 경험 (TODO)
+
+> 이 섹션은 실제 운영 후 작성 예정
+
+### 11.1 배포 및 인프라
+
+| 항목 | 내용 |
+|------|------|
+| 배포 환경 | (예: AWS EC2, Docker 등) |
+| CI/CD | - |
+| 모니터링 | - |
+
+### 11.2 장애 대응
+
+| 날짜 | 증상 | 원인 | 해결 | 재발 방지 |
+|------|------|------|------|----------|
+| - | - | - | - | - |
+
+### 11.3 사용자 피드백 반영
+
+| 피드백 | 개선 내용 |
+|--------|----------|
+| - | - |
+
+---
+
+## 12. 결론
+
+### 12.1 AI 활용 개발의 핵심
 
 1. **AI는 도구**: 최종 결정과 검증은 개발자의 몫
 2. **명확한 요구사항**: 구체적인 예시와 컨텍스트 제공
 3. **반복적 개선**: 한 번에 완벽한 코드를 기대하지 말 것
 4. **문서화**: CLAUDE.md 등으로 프로젝트 컨텍스트 유지
 
-### 6.2 이 프로젝트에서 배운 점
+### 12.2 이 프로젝트에서 배운 점
 
 - 4일 만에 풀스택 웹앱 MVP 완성 가능
 - AI와의 협업은 "페어 프로그래밍"에 가까움
@@ -258,9 +608,9 @@ claude mcp add github
 
 ---
 
-## 7. 향후 계획: Ralph Wiggum 자율 루프 활용
+## 13. 향후 계획: Ralph Wiggum 자율 루프 활용
 
-### 7.1 Ralph Wiggum이란?
+### 13.1 Ralph Wiggum이란?
 
 [Ralph Wiggum](https://github.com/anthropics/claude-code/tree/main/plugins/ralph-wiggum)은 Claude Code의 공식 플러그인으로, AI가 **자율적으로 반복 작업**을 수행하게 하는 기법입니다.
 
@@ -270,7 +620,7 @@ claude mcp add github
 
 심슨의 캐릭터 이름에서 유래했으며, 2025년 말 Anthropic이 공식 채택했습니다.
 
-### 7.2 적용 예정 작업
+### 13.2 적용 예정 작업
 
 | 작업 | 목표 | 예상 iteration |
 |------|------|----------------|
@@ -279,7 +629,7 @@ claude mcp add github
 | 성능 최적화 | N+1 쿼리 해결, 캐싱 적용 | 5-10 |
 | 새 기능 추가 | (추후 결정) | TBD |
 
-### 7.3 사용 계획
+### 13.3 사용 계획
 
 ```bash
 # 플러그인 설치
@@ -293,7 +643,7 @@ JUnit 5 + Mockito로 테스트 작성해줘." \
 --max-iterations 20
 ```
 
-### 7.4 비용 및 리스크 관리
+### 13.4 비용 및 리스크 관리
 
 | 항목 | 전략 |
 |------|------|
@@ -301,7 +651,7 @@ JUnit 5 + Mockito로 테스트 작성해줘." \
 | 품질 검증 | 매 iteration 후 diff 리뷰 |
 | 롤백 계획 | 작업 전 브랜치 생성, 실패 시 reset |
 
-### 7.5 결과 기록 (예정)
+### 13.5 결과 기록 (예정)
 
 > 이 섹션은 Ralph Wiggum 활용 후 실제 결과로 업데이트 예정
 

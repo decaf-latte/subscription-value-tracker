@@ -4,12 +4,13 @@
 
 echo "🔧 Installing Git hooks..."
 
-# 프로젝트 루트로 이동
-cd "$(git rev-parse --show-toplevel)" || exit 1
+# 프로젝트 루트 경로 확인
+PROJECT_ROOT="$(git rev-parse --show-toplevel)"
+cd "$PROJECT_ROOT" || exit 1
 
 # pre-commit hook 복사
-cp scripts/pre-commit .git/hooks/pre-commit
-chmod +x .git/hooks/pre-commit
+cp "$PROJECT_ROOT/scripts/pre-commit" "$PROJECT_ROOT/.git/hooks/pre-commit"
+chmod +x "$PROJECT_ROOT/.git/hooks/pre-commit"
 
 echo "✅ Git hooks installed successfully!"
 echo ""

@@ -16,7 +16,7 @@ if ./gradlew tasks --all 2>/dev/null | grep -q "checkstyleMain"; then
     if [ $? -ne 0 ]; then
         echo "❌ Lint check failed! Commit blocked."
         echo "Run './gradlew checkstyleMain' to see details."
-        exit 2
+        exit 1
     fi
     echo "✅ Lint check passed!"
 else
@@ -31,7 +31,7 @@ echo "🧪 Step 2/2: Running tests..."
 if [ $? -ne 0 ]; then
     echo "❌ Tests failed! Commit blocked."
     echo "Fix the failing tests before committing."
-    exit 2
+    exit 1
 fi
 echo "✅ All tests passed!"
 

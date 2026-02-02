@@ -13,7 +13,7 @@ if [ $? -ne 0 ]; then
     echo "❌ Lint check failed! Commit blocked."
     echo "Run './gradlew checkstyleMain' to see details."
     echo "Report: build/reports/checkstyle/main.html"
-    exit 2  # exit 2 = Claude에게 작업 차단 신호
+    exit 1  # 표준 에러 코드
 fi
 
 echo "✅ Lint check passed!"

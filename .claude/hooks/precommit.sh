@@ -9,14 +9,19 @@ cd "$(git rev-parse --show-toplevel)" || exit 1
 # 1. 린트 검사 (Checkstyle)
 echo ""
 echo "📋 Step 1/2: Lint check (Checkstyle)..."
-./gradlew checkstyleMain --quiet 2>/dev/null
 
-if [ $? -ne 0 ]; then
-    echo "❌ Lint check failed! Commit blocked."
-    echo "Run './gradlew checkstyleMain' to see details."
-    exit 2
+# Checkstyle이 설정되어 있는지 확인
+if ./gradlew tasks --all 2>/dev/null | grep -q "checkstyleMain"; then
+    ./gradlew checkstyleMain --quiet 2>/dev/null
+    if [ $? -ne 0 ]; then
+        echo "❌ Lint check failed! Commit blocked."
+        echo "Run './gradlew checkstyleMain' to see details."
+        exit 2
+    fi
+    echo "✅ Lint check passed!"
+else
+    echo "⚠️  Checkstyle not configured, skipping..."
 fi
-echo "✅ Lint check passed!"
 
 # 2. 테스트 실행
 echo ""
